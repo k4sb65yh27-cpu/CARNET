@@ -752,6 +752,24 @@ body.ab .toast,body.cta-on .toast{bottom:calc(var(--tb) + var(--sb) + 96px)}
   .sheet,.alert,.kp{animation:fade .2s ease!important}.sheet>div,.alert>div,.kpp{animation:none!important}}
 @media (hover:hover) and (pointer:fine){button.b:not(:disabled):hover{filter:brightness(1.08)}.li:not(.nc):hover,.mcard:hover,.exo>header:hover{background:var(--el2)}.ib:hover{color:var(--tx)}}
 @media (min-width:700px){.grid.g4{grid-template-columns:repeat(4,1fr)}}
+.fgo{display:flex;align-items:center;gap:8px;margin:2px 0 10px;font-size:13px;color:var(--tx2)}
+.fgo b{color:var(--tx);font-weight:680}
+.fgl .fgd{display:flex;gap:4px;margin:7px 0 2px}
+.fgd i{width:16px;height:5px;border-radius:3px;background:var(--el3)}
+.fgd i.ok{background:var(--ac)}.fgd i.on{background:var(--ac);opacity:.45}.fgd i.op{width:9px}
+.fgb{display:flex;align-items:center;gap:6px;flex:none}.fgb b{min-width:18px;text-align:center;font-size:15px}
+.fgb .b[disabled]{opacity:.35}
+details.fgr{padding:0;margin-bottom:10px}
+details.fgr summary{display:flex;align-items:center;gap:8px;padding:14px 16px;cursor:pointer;list-style:none;font-size:15px}
+details.fgr summary::-webkit-details-marker{display:none}
+details.fgr summary::after{content:'+';color:var(--tx3);font-size:18px;line-height:1}
+details.fgr[open] summary::after{content:'−'}
+details.fgr .list{margin:0 0 6px}
+.hold{position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;background:var(--bg)}
+.hold .hk{font-size:15px;font-weight:650;color:var(--tx2);text-transform:uppercase;letter-spacing:.08em}
+.hold .hv{font-family:var(--disp);font-size:120px;line-height:1;color:var(--tx)}
+.hold .b.big{min-width:220px}
+.errb{position:fixed;left:12px;right:12px;bottom:calc(92px + env(safe-area-inset-bottom));z-index:9000;display:flex;align-items:center;gap:8px;padding:12px;border-radius:14px;background:var(--el2);color:var(--tx);font-size:13px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
 </style>
 </head>
 <body>
@@ -779,7 +797,7 @@ function hlong(s){s=Math.round(s/60);var h=Math.floor(s/60),m=s%60;
 function nfmt(v){return (Math.round(v*10)/10).toString().replace('.',',')}
 
 /* ================= STATE ================= */
-var KEY='carnet-v1', SCHEMA=15, VERSION='1.16.1';
+var KEY='carnet-v1', SCHEMA=16, VERSION='1.17.0';
 var SEED=[
  ['Développé couché','Pecs','kg',150,2.5],['Développé incliné','Pecs','kg',150,2.5],['Chest press','Pecs','kg',120,5],
  ['Strict press','Épaules','kg',150,2.5],['Pompes','Pecs','bw',90,0],['Dips','Pecs','bw',120,2.5],
@@ -801,7 +819,7 @@ function seedExos(){return SEED.map(function(e){return {id:uid(),nom:e[0],groupe
 var MODAL=['Course extérieur','Course tapis','Echo bike','Rameur','Ski erg','Vélo','Mini elliptique','Salle / plateau','Marche','Escalier','Conditioning KB','Autre'];
 
 function fresh(){return{schema:SCHEMA,exos:seedExos(),seances:[],blocs:[],modeles:[],cur:null,timer:null,
-  prefs:{theme:'auto',rest:120,fcmax:0,w4:0,rpm4:0,vma:0,poids:0,z2goal:180,lock:1,row500:0,ski500:0,age:0,taille:0,mg:0,zpro:1,zet:0,th:thDef()},wod:null,goals:{},prog:null}}
+  prefs:{theme:'auto',rest:120,fcmax:0,w4:0,rpm4:0,vma:0,poids:0,z2goal:180,lock:1,row500:0,ski500:0,age:0,taille:0,mg:0,zpro:1,zet:0,th:thDef()},wod:null,goals:{},prog:null,fig:{}}}
 function thDef(){return {cmin:20,cver:'rx',cgoal:0,ltop:10,lver:'rx',hset:3,hpu:12,hlr:10,hpp:25,hrest:4,hsq:100,hver:'rx',wset:4,wsw:25,wpp:15,wrest:60,wkg:16,wver:'rx'}}
 function migrate(s){
   if(!s.prefs)s.prefs={};
@@ -853,6 +871,8 @@ function migrate(s){
   if(!s.goals||typeof s.goals!=='object')s.goals={};
   /* schéma 15 : programme importé (prog : fichier privé, jamais dans le code), profil nutrition (age, taille, mg, zpro, zet) via dp */
   if(s.prog===undefined||(s.prog&&!(s.prog.data&&prgValid(s.prog.data))))s.prog=null;
+  /* schéma 16 : palier courant par figure du programme importé (fig[id]={i,d,h}) */
+  if(!s.fig||typeof s.fig!=='object'||Array.isArray(s.fig))s.fig={};
   s.schema=SCHEMA; return s;
 }
 function load(){try{var r=JSON.parse(localStorage.getItem(KEY));if(r&&r.schema)return migrate(r)}catch(e){}return fresh()}
@@ -1471,7 +1491,9 @@ function addSet(exoId,reps,charge,forceW){
   S.cur.sets.push(st); recalcPR(S.cur);
   S.cur.act=exoId; save();
   var n=S.cur.sets.filter(function(s){return s.exoId===exoId&&!s.w}).length+1;
-  restStart(w?Math.min(60,restFor(e)):restFor(e),w?'Échauffement · '+e.nom:'Série '+n+' · '+e.nom);
+  var cx=!w&&circNext(exoId);
+  if(cx){S.cur.act=cx.next;save();if(cx.rest>0)restStart(cx.rest,cx.txt);else restStop()}
+  else restStart(w?Math.min(60,restFor(e)):restFor(e),w?'Échauffement · '+e.nom:'Série '+n+' · '+e.nom);
   if(st.pr){toast('Record personnel');beep(1320,.18);setTimeout(function(){beep(1600,.22)},160);hap('big')}
   else if(w){toast('Échauffement : hors volume et records');hap('ok')} else hap('ok');
   paint();
@@ -1679,7 +1701,11 @@ function promptFallback(t){ openSheet('<h2>Séance</h2><div style="height:10px">
 /* ================= ONBOARDING ================= */
 var KONB='carnet-onb', KVER='carnet-ver';
 /* Registre des nouveautés : une entrée par version, la plus récente en tête. [pictogramme, titre, texte] */
-var NEWS=[{v:'1.16.1',l:[
+var NEWS=[{v:'1.17.0',l:[
+  ['pullup','Programmes au poids du corps','Un fichier programme peut décrire des figures par niveaux : objectif de chaque niveau, validation en un geste, critères de passage de phase.'],
+  ['stopwatch','Circuits et chrono de maintien','Les circuits tournent seuls d\'un exercice à l\'autre avec les bons repos. Les maintiens ont un chrono avec 5 s de mise en place.'],
+  ['trophy','Reprise depuis ATELIER','Les paliers et essais d\'une sauvegarde ATELIER ou POLARIS se reprennent dans Carnet.']]},
+ {v:'1.16.1',l:[
   ['dumbbell','Nouvelle icône','Un haltère dont la barre est un tracé cardio : renfo et cardio réunis. Sur iPhone, l\'écran d\'accueil garde l\'ancienne icône tant que l\'app n\'est pas réinstallée.']]},
  {v:'1.16.0',l:[
   ['curl','Pictogrammes corrigés','Curl, upright row, extension triceps, rowing unilatéral et crunch machine avaient un mauvais dessin. C\'est réglé.'],
@@ -2415,6 +2441,7 @@ function vRenfoRun(){
     '<span class="tag ac">'+(b?'Bloc · S'+c.semaine:'En cours')+'</span></div>'+
     '<div class="st3"><div>Séries<b>'+nWork(c.sets)+'</b></div><div>Volume<b>'+fmtKg(volume(c))+'</b></div><div>Exercices<b>'+doneEx+' / '+c.order.length+'</b></div></div>'+
     '<div class="prog"><b style="width:'+(c.order.length?Math.round(doneEx/c.order.length*100):0)+'%"></b></div></div>';
+  h+=fgRout(c,'ech');
   if(!c.order.length)h+='<div class="card"><div class="empty">'+ico('dumbbell')+'<b>Séance vide</b>Ajoute ton premier exercice.</div></div>';
   c.order.forEach(function(eid){
     var e=exo(eid);if(!e)return;
@@ -2461,10 +2488,11 @@ function vRenfoRun(){
       var tqOpen=showTq&&(!!tqc||!!(c.tqo&&c.tqo[eid]));
       if(tqOpen)h+='<div class="seg tqs">'+['','tempo','uni','rp'].filter(function(k){return k!=='uni'||e.uni||tqc==='uni'}).map(function(k){
         return '<button data-act="tq" data-id="'+eid+'" data-v="'+k+'" aria-pressed="'+(tqc===k)+'">'+TQL[k]+'</button>'}).join('')+'</div>';
-      if(zi)h+=prgChips(zi,c.prog.rest?c.prog.rest[eid]:0,ws.length);
+      if(zi)h+=prgChips(zi,c.prog.rest?c.prog.rest[eid]:0,ws.length)+fgHint(zi,ws,eid);
       if(lastS)h+='<p class="hint">'+dshort(lastS.date)+' · '+lastS.sets.map(function(x){return x.w?'<span class="hw">É '+setLabel(e,x)+'</span>':setLabel(e,x)+(x.tq?' '+TQS[x.tq]:'')}).join('  ·  ')+'</p>';
       h+='<div class="row" style="gap:8px">'+stp('r_'+eid,dr,e.unite==='sec'?'secondes':'reps',e.unite==='sec'?5:1)+
         (e.unite==='bw'&&!dc?'':stp('c_'+eid,dc,e.unite==='lvl'?'niveau':(e.unite==='bw'?'lest kg':'kg'),e.inc||2.5))+'</div>';
+      if(e.unite==='sec')h+='<button class="b sm tint full" style="margin-top:6px" data-act="hold" data-id="'+eid+'">Chrono, mise en place 5 s</button>';
       if(e.unite==='bw'&&!dc)h+='<button class="b sm gh full" style="margin-top:6px" data-act="add-lest" data-id="'+eid+'">Ajouter du lest</button>';
       h+='<button class="b pri big full" style="margin-top:10px" id="sb_'+eid+'" data-act="set-add" data-id="'+eid+'"'+(whS?' data-w="1">Valider l\'échauffement':'>Valider la série '+(ws.length+1))+'</button>'+
         '<div class="row" style="margin-top:8px;justify-content:space-between"><button class="b gh sm" data-act="exo-info" data-id="'+eid+'">Progression</button>'+
@@ -2474,6 +2502,7 @@ function vRenfoRun(){
     if(sets.length||isAct)h+='</div>';
     h+='</div>';
   });
+  h+=fgRout(c,'etir');
   h+='<button class="b full tint" data-act="pick-open" style="margin:4px 0 14px">Ajouter un exercice</button>';
   h+='<div class="btns"><button class="b dgr" data-act="cur-abort">Abandonner</button><button class="b pri" data-act="renfo-end">Terminer</button></div>';
   return h+'<div style="height:80px"></div>';
@@ -3302,11 +3331,17 @@ function prgExo(x){var e=exoByName(x.nom);
 function prgStart(code){var p=prgCur();if(!p)return;var s=prgSes(p,code);if(!s)return;
   if(S.cur){toast('Termine d\'abord la séance en cours');go('renfo');return}
   var order=[],rest={},itm={};
-  s.exos.forEach(function(x){var e=prgExo(x);if(order.indexOf(e.id)<0)order.push(e.id);rest[e.id]=+x.repos||0;
-    itm[e.id]={mode:x.mode||'classique',reps:(x.reps||[]).slice(0,6),baisse:+x.baisse||0,note:x.note||'',fin:x.fin||'',avec:x.avec||''}});
+  prgEx(p,s).forEach(function(x){var e=prgExo(x);if(order.indexOf(e.id)<0)order.push(e.id);rest[e.id]=+x.repos||0;
+    itm[e.id]={mode:x.mode||'classique',reps:(x.reps||[]).slice(0,6),baisse:+x.baisse||0,note:x.note||'',fin:x.fin||'',avec:x.avec||''};
+    if(x.fig!==undefined){itm[e.id].fig=x.fig;itm[e.id].li=x.li;itm[e.id].md=x.md||'';if(x.repli)itm[e.id].repli=x.repli}
+    if(x.circ)itm[e.id].circ=x.circ});
   _vfade=1;newRenfo(order);S.cur.nom=(S.prog.data.nom||'Programme')+' '+s.code+' · '+s.nom;
-  S.cur.prog={pid:p.id,code:s.code,rest:rest,it:itm};save();paint()}
-function prgTarget(zi,e,ws){var k=ws.length,rp=zi.reps.length?zi.reps[Math.min(k,zi.reps.length-1)]:'8',r=rlo(rp),c=0;
+  S.cur.prog={pid:p.id,code:s.code,rest:rest,it:itm};
+  if(S.prog.data.methode==='figures'){S.cur.prog.ech=(s.echauf||[]).slice(0,4);S.cur.prog.etir=(s.etir||[]).slice(0,4);if(order.length)S.cur.act=order[0]}
+  save();paint()}
+function prgTarget(zi,e,ws){if(zi.fig!==undefined){var lw=ws[ws.length-1],F0=fgFig(zi.fig),L0=F0&&F0.niveaux[zi.li];
+    return {r:lw?+lw.reps||0:(L0&&L0.obj?+L0.obj.v:(e.unite==='sec'?20:5)),c:lw?+lw.charge||0:0}}
+  var k=ws.length,rp=zi.reps.length?zi.reps[Math.min(k,zi.reps.length-1)]:'8',r=rlo(rp),c=0;
   if(k>0){var c0=+ws[0].charge||0,cl=+ws[k-1].charge||0;
     if(zi.mode==='pyramide'&&cl>0)c=roundInc(cl*(1-Math.min(.3,Math.max(0,zi.baisse||.1))),e.inc);else c=cl}
   return {r:r,c:c}}
@@ -3326,8 +3361,8 @@ function prgWeek(p){var m=monday(today()),n=S.seances.filter(function(x){return 
 function prgHero(p,nx,compact){var s=nx.s;if(!s)return '';var ph=compact?(zImg(s.code)||zImg('cover')):'',lg=zImg('logo');
   return '<div class="zhero'+(ph?' ph':'')+'">'+(ph?'<img class="zbg" src="'+ph+'" alt="">'+(lg?'<img class="zlogo" src="'+lg+'" alt="">':''):ZBOLT)+
     '<span class="zpill">Prochaine séance</span><div class="zt">Séance '+esc(s.code)+'</div>'+
-    '<div class="zs">'+esc(s.nom)+' · '+s.exos.length+' exercices'+(nx.last?' · dernière '+dRel(nx.last.date):'')+'</div>'+prgWeek(p)+
-    '<div class="zl">'+s.exos.map(function(x){return '<span>'+esc(x.nom)+'</span>'}).join('')+'</div>'+
+    '<div class="zs">'+esc(s.nom)+' · '+prgEx(p,s).length+' exercices'+(nx.last?' · dernière '+dRel(nx.last.date):'')+'</div>'+prgWeek(p)+
+    '<div class="zl">'+prgEx(p,s).map(function(x){return '<span>'+esc(x.nom)+'</span>'}).join('')+'</div>'+
     '<button class="b big full zgo" data-act="prg-start" data-v="'+esc(s.code)+'">Démarrer la séance '+esc(s.code)+'</button>'+
     (compact?'<button class="b sm full zlk" data-act="tab" data-t="prog">Voir le programme</button>':'')+'</div>'}
 function prgBil(){var p=prgCur();if(!p)return '';var nx=prgNext(p),s=nx.s;if(!s)return '';var ph=zImg(s.code)||zImg('cover');
@@ -3336,8 +3371,10 @@ function prgBil(){var p=prgCur();if(!p)return '';var nx=prgNext(p),s=nx.s;if(!s)
 function prgWeekN(p){var m=monday(today()),n=S.seances.filter(function(x){return x.prog&&x.prog.pid===p.id&&x.date>=m}).length,g=(p.jours&&p.jours.length)||p.seances.length;return n+' sur '+g}
 function prgValid(d){try{if(!d||d.format!=='carnet-programme/1'||!Array.isArray(d.programmes)||!d.programmes.length)return false;
   d.programmes.forEach(function(p){if(!p.id||!Array.isArray(p.seances)||!p.seances.length)throw 0;p.id=String(p.id);
-    p.seances.forEach(function(s){if(s.code===undefined||s.code===null||!Array.isArray(s.exos))throw 0;s.code=String(s.code);if(!s.nom)s.nom='Séance '+s.code;
+    p.seances.forEach(function(s){if(!Array.isArray(s.exos)&&(Array.isArray(s.tt)||Array.isArray(s.circuits)))s.exos=[];
+      if(s.code===undefined||s.code===null||!Array.isArray(s.exos))throw 0;s.code=String(s.code);if(!s.nom)s.nom='Séance '+s.code;
       s.exos.forEach(function(x){if(!x||!x.nom)throw 0;x.nom=String(x.nom);if(!Array.isArray(x.reps))x.reps=[];x.reps=x.reps.map(String)})})});
+  if(d.methode==='figures'&&!fgValid(d))return false;
   prgMarque(d);return true}catch(e){return false}}
 /* visuels facultatifs du fichier privé : data:image en base64 seulement, rien n'est chargé depuis le réseau */
 function imgOk(v){return typeof v==='string'&&v.length<900000&&/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]+$/.test(v)}
@@ -3349,6 +3386,153 @@ function prgMarque(d){var m=d.marque;if(!m||typeof m!=='object'){delete d.marque
 function zImg(k){var m=S.prog&&S.prog.data&&S.prog.data.marque;if(!m)return '';
   if(k==='logo')return m.logo||'';if(k==='cover')return m.cover||'';var ph=m.photos;return ph&&Object.prototype.hasOwnProperty.call(ph,k)&&imgOk(ph[k])?ph[k]:''}
 var ZBOLT='<svg class="zbolt" viewBox="0 0 100 160" aria-hidden="true"><path d="M64 0 16 94h32L34 160 88 56H56z"/></svg>';
+/* ================= MÉTHODE FIGURES (schéma 16) =================
+   Moteur générique : le fichier privé décrit figures (niveaux, objectifs, prérequis), phases (travail technique en circuit
+   ou par essais, critères de passage), circuits (parties, tours, pauses, variantes par étiquette de programme), routines
+   et GTG. Le code ne contient aucun contenu de méthode. */
+function fgValid(d){if(!Array.isArray(d.figures))return false;var ok=true;
+  d.figures.forEach(function(f){if(!f||!f.id||!Array.isArray(f.niveaux)||!f.niveaux.length){ok=false;return}f.id=String(f.id);
+    f.niveaux.forEach(function(l){if(!l||!l.nom)ok=false;else l.nom=String(l.nom)})});
+  if(d.circuits&&typeof d.circuits!=='object')ok=false;if(d.phases&&!Array.isArray(d.phases))ok=false;return ok}
+function fgD(){return S.prog&&S.prog.data&&S.prog.data.methode==='figures'?S.prog.data:null}
+function fgFig(id){var d=fgD();if(!d)return null;for(var i=0;i<d.figures.length;i++)if(d.figures[i].id===id)return d.figures[i];return null}
+function fgPh(n){var d=fgD();return d&&d.phases?d.phases.filter(function(x){return x.n===n})[0]||null:null}
+function fgLvl(id){var F=fgFig(id),z=S.fig&&S.fig[id];if(!F)return 0;return Math.max(0,Math.min(F.niveaux.length-1,z?+z.i||0:0))}
+function fgU(u){return u==='sec'?'sec':'bw'}
+function fgObj(o){return o.v+(o.u==='sec'?' s':' reps')+(o.cote?' par côté':'')}
+function fgLbl(v,u,cote){return v===null||v===undefined?'—':(String(v).toUpperCase()==='MAX'?'Max':v+(u==='sec'?' s':''))+(cote?' /côté':'')}
+function fgItem(F,i){var L=F.niveaux[i],u=L.obj?L.obj.u:(L.u||'reps');return {nom:L.nom,groupe:F.nom,unite:fgU(u),ic:F.ic||''}}
+function fgFigs(p){var d=fgD(),ph=fgPh(p.phase);if(!d)return [];
+  var ids=ph&&ph.figures?ph.figures:d.figures.filter(function(f){return f.phase===p.phase}).map(function(f){return f.id});
+  return ids.map(fgFig).filter(Boolean)}
+/* séance dépliée : travail technique puis circuits, chaque entrée au format des exercices du moteur */
+function prgEx(p,s){var d=S.prog&&S.prog.data;if(!d||d.methode!=='figures')return s.exos||[];
+  var out=[],ph=fgPh(p.phase),tt=ph&&ph.tt||{mode:'essais',repos:90},tags=p.tags||[];
+  (s.tt||[]).forEach(function(fid){var F=fgFig(fid);if(!F)return;var i=fgLvl(fid),L=F.niveaux[i],o=L.obj,x=fgItem(F,i);
+    x.fig=fid;x.li=i;x.md='tt';x.note=L.note||'';
+    if(tt.mode==='circuit'){var n=Math.max(1,+tt.tours||1),r=[];for(var k=0;k<n;k++)r.push('Max');x.reps=r;x.repos=+tt.pexos||0;
+      x.circ={g:'tt',tours:n,pex:+tt.pexos||0,ptr:+tt.ptours||0,nom:'Travail technique'};x.repli=x.unite==='sec'?(+tt.repliSec||0):(+tt.repli||0)}
+    else{x.reps=['Max'];x.repos=+tt.repos||90;x.note=[tt.duree?'Essais pendant '+tt.duree+'.':'',L.note||''].filter(Boolean).join(' ')}
+    out.push(x)});
+  (s.circuits||[]).forEach(function(cid){var C=d.circuits&&d.circuits[cid];if(!C)return;
+    (C.parties||[]).forEach(function(P,pi){var n=Math.max(1,+P.tours||1),rot=P.rotation!==0;
+      (P.exos||[]).forEach(function(X){if(X.si&&tags.indexOf(X.si)<0)return;var x,F=X.fig?fgFig(X.fig):null;
+        if(F&&(X.mode==='courant'||X.mode==='inferieur')){var i=fgLvl(X.fig);if(X.mode==='inferieur')i=Math.max(0,i-1);x=fgItem(F,i);x.fig=X.fig;x.li=i;x.md=X.mode}
+        else{x={nom:X.mode==='dropset'?X.nom+' en dropset':X.nom,groupe:C.nom,unite:fgU(X.u)};
+          if(F&&X.mode==='dropset'){var j=fgLvl(X.fig),nm=[];for(var k=j;k>=0;k--)nm.push(F.niveaux[k].nom);x.dn=nm.join(', ')}}
+        var lb=fgLbl(X.v,X.u,X.cote),r=[];for(var k2=0;k2<n;k2++)r.push(lb);x.reps=r;x.repos=+P.pexos||0;
+        x.note=[P.nom&&C.parties.length>1?P.nom+'.':'',X.var?'Variante : '+X.var+'.':'',X.note||'',x.dn?'Niveaux : '+x.dn+'.':''].filter(Boolean).join(' ');
+        if(rot)x.circ={g:cid+':'+pi,tours:n,pex:+P.pexos||0,ptr:+P.ptours||0,nom:C.nom};else x.repos=+P.ptours||+P.pexos||0;
+        out.push(x)})})});
+  return out}
+function circNext(eid){var c=S.cur,it=c&&c.prog&&c.prog.it,z=it&&it[eid];if(!z||!z.circ)return null;var g=z.circ.g;
+  var m=c.order.filter(function(id){return it[id]&&it[id].circ&&it[id].circ.g===g});if(!m.length)return null;
+  function cnt(id){return c.sets.filter(function(s){return s.exoId===id&&!s.w}).length}
+  function nm(id){var e=exo(id);return e?e.nom:''}
+  var k=m.indexOf(eid),tour=cnt(m[m.length-1]);
+  if(k<m.length-1)return {next:m[k+1],rest:z.circ.pex,txt:'Ensuite · '+nm(m[k+1])};
+  if(tour>=z.circ.tours){var rs=c.order.filter(function(id){return m.indexOf(id)<0&&!c.sets.some(function(s){return s.exoId===id})}),nx=rs[0]||eid;
+    return {next:nx,rest:rs.length?z.circ.ptr:0,txt:(z.circ.nom||'Circuit')+' terminé · '+nm(nx)}}
+  return {next:m[0],rest:z.circ.ptr,txt:'Tour '+(tour+1)+' sur '+z.circ.tours+' · '+nm(m[0])}}
+function fgHint(zi,ws,eid){if(zi.fig===undefined)return '';var F=fgFig(zi.fig);if(!F)return '';var L=F.niveaux[zi.li];if(!L)return '';
+  var o=L.obj,n=F.niveaux.length,h='<div class="fgo"><span class="tag ac">Niveau '+(zi.li+1)+' sur '+n+'</span>'+(o?'<span class="grow">Objectif <b>'+fgObj(o)+'</b></span>':'<span class="grow"></span>')+
+    (L.video&&/^https:\/\/[^\s"'<>]+$/.test(L.video)?'<a class="b xs gh" href="'+esc(L.video)+'" target="_blank" rel="noopener">Démo</a>':'')+'</div>';
+  var lw=ws[ws.length-1];
+  if(o&&(zi.md==='tt'||zi.md==='courant')&&zi.li===fgLvl(zi.fig)&&zi.li<n-1&&ws.some(function(s){return (+s.reps||0)>=o.v}))
+    h+='<div class="sug">'+SVGI.spark+'<span class="grow">Objectif atteint. Niveau suivant : <b>'+esc(F.niveaux[fgStep(F,zi.li,1)].nom)+'</b></span><button class="b xs tint" data-act="fig-up" data-f="'+esc(zi.fig)+'">Valider</button></div>';
+  else if(zi.repli&&lw&&(+lw.reps||0)<=zi.repli&&fgStep(F,zi.li,-1,1)!==zi.li)
+    h+='<div class="sug">'+SVGI.spark+'<span class="grow">Série courte : complète avec <b>'+esc(F.niveaux[fgStep(F,zi.li,-1,1)].nom)+'</b></span><button class="b xs tint" data-act="fig-repli" data-id="'+eid+'">Compléter</button></div>';
+  return h}
+function fgSel(all,p){var phs=[];all.forEach(function(q){if(phs.indexOf(q.phase)<0)phs.push(q.phase)});
+  function first(n){for(var i=0;i<all.length;i++)if(all[i].phase===n)return i;return 0}
+  var h='<div class="seg">'+phs.map(function(n){var P=fgPh(n);return '<button data-act="prg-sel" data-v="'+first(n)+'" aria-pressed="'+(p.phase===n)+'" aria-label="Phase '+n+(P?', '+esc(P.nom):'')+'">Phase '+n+'</button>'}).join('')+'</div>';
+  var sub=[];all.forEach(function(q,i){if(q.phase===p.phase)sub.push([q,i])});
+  if(sub.length>1)h+='<div class="seg">'+sub.map(function(x){var nm=String(x[0].nom||'').replace(/^Phase\s*\d+\s*/,'').replace(/^·\s*/,'');
+    return '<button data-act="prg-sel" data-v="'+x[1]+'" aria-pressed="'+(x[0]===p)+'" aria-label="'+esc(x[0].nom||'')+'">'+esc(nm||x[0].nom)+'</button>'}).join('')+'</div>';
+  return h}
+/* niveau voisin en sautant les niveaux facultatifs ; pour le repli (mu=1), aussi ceux d'une autre mesure (reps contre secondes) */
+function fgUo(L){return L.obj?L.obj.u:(L.u||'reps')}
+function fgStep(F,i,dir,mu){var j=i+dir;while(F.niveaux[j]&&(F.niveaux[j].opt||(mu&&fgUo(F.niveaux[j])!==fgUo(F.niveaux[i]))))j+=dir;return F.niveaux[j]?j:i}
+function fgSet(id,i,ok){var F=fgFig(id);if(!F)return;i=Math.max(0,Math.min(F.niveaux.length-1,i));var z=S.fig[id]||{i:0,h:[]};if(i===fgLvl(id)){hap('tap');return}
+  S.fig[id]={i:i,d:today(),h:(z.h||[]).concat([[i,today()]]).slice(-40)};save();
+  toast((ok?'Niveau validé · ':'Niveau '+(i+1)+' · ')+F.niveaux[i].nom);hap(ok?'big':'tap');paint()}
+function fgRepli(eid){var c=S.cur,z=c&&c.prog&&c.prog.it&&c.prog.it[eid];if(!z||z.fig===undefined||z.li<1)return;var F=fgFig(z.fig);if(!F)return;
+  var pv=fgStep(F,z.li,-1,1);if(pv===z.li)return;var e2=prgExo(fgItem(F,pv));if(c.order.indexOf(e2.id)<0)c.order.splice(c.order.indexOf(eid)+1,0,e2.id);
+  c.prog.it[e2.id]={mode:'classique',reps:['Max'],baisse:0,note:'Complète la série du niveau '+(z.li+1)+'.',fin:'',avec:'',fig:z.fig,li:pv,md:'repli',repli:z.repli};
+  c.prog.rest[e2.id]=0;c.act=e2.id;restStop();save();hap('tap');paint()}
+function fgCrit(c){var F=fgFig(c.fig);if(!F)return {ok:0,t:c.fig,m:'',best:'—'};var ks=[F.niveaux.length-1];if(c.alt!==undefined&&F.niveaux[c.alt])ks.push(+c.alt);
+  var best=0;ks.forEach(function(k){var e=exoByName(F.niveaux[k].nom);if(e)best=Math.max(best,prOf(e.id).reps||0)});
+  var u=c.u==='sec'?' s':'';return {ok:best>=c.v,best:best?best+u:'—',t:F.nom+' : '+c.v+(u||' reps')+(c.cote?' par côté':''),
+    m:esc(F.niveaux[F.niveaux.length-1].nom)+(ks.length>1?' ou '+esc(F.niveaux[ks[1]].nom):'')+(best?' · meilleur '+best+u:'')}}
+function fgRoutine(r,open){if(!r)return '';return '<details class="card fgr"'+(open?' open':'')+'><summary><b class="grow">'+esc(r.nom||'')+'</b><span class="s12 dim">'+esc(r.duree||'')+'</span></summary>'+
+  '<div class="list">'+(r.items||[]).map(function(x){return li({t:esc(x.nom),r:'<span class="s12 dim">'+esc(x.dose||'')+'</span>'})}).join('')+'</div>'+(r.note?'<p class="foot">'+esc(r.note)+'</p>':'')+'</details>'}
+function fgRout(c,k){var d=fgD();if(!d||!c.prog||!c.prog[k]||!c.prog[k].length)return '';var R=d.routines||{};
+  return c.prog[k].map(function(id){return fgRoutine(R[id],0)}).join('')}
+function fgView(d,p){var ph=fgPh(p.phase),h='';
+  h+='<div class="sec">'+(ph?'Phase '+ph.n+' · '+esc(ph.nom):'Progressions')+'</div><div class="list">';
+  fgFigs(p).forEach(function(F){var i=fgLvl(F.id),L=F.niveaux[i],n=F.niveaux.length,dots='';
+    for(var k=0;k<n;k++)dots+='<i class="'+(k<i?'ok':(k===i?'on':''))+(F.niveaux[k].opt?' op':'')+'"></i>';
+    h+='<div class="li nc fgl"><span class="grow"><div class="t sb">'+esc(F.nom)+(F.bonus?' <span class="tag">bonus</span>':'')+'</div>'+
+      '<div class="m">'+esc(L.nom)+(L.obj?' · objectif '+fgObj(L.obj):'')+'</div><span class="fgd" aria-label="Niveau '+(i+1)+' sur '+n+'">'+dots+'</span>'+
+      (F.prereq&&i===0?'<div class="m">Prérequis : '+esc(F.prereq.join(', '))+'</div>':'')+'</span>'+
+      '<span class="fgb"><button class="b xs" data-act="fig-set" data-f="'+esc(F.id)+'" data-v="-1" aria-label="'+esc(F.nom)+', niveau précédent"'+(i?'':' disabled')+'>−</button>'+
+      '<b class="num">'+(i+1)+'</b><button class="b xs" data-act="fig-set" data-f="'+esc(F.id)+'" data-v="1" aria-label="'+esc(F.nom)+', niveau suivant"'+(i<n-1?'':' disabled')+'>+</button></span></div>'});
+  h+='</div><p class="foot">Le niveau monte quand une série atteint l\'objectif et que tu valides. Les boutons servent au test initial.</p>';
+  if(ph&&ph.criteres&&ph.criteres.length){var ok=0,rows=ph.criteres.map(function(c){var r=fgCrit(c);if(r.ok)ok++;
+      return li({t:esc(r.t),m:r.m,r:r.ok?'<span class="tag ac">validé</span>':'<span class="s12 dim">'+esc(r.best)+'</span>'})}).join('');
+    h+='<div class="sec">'+(fgPh(ph.n+1)?'Prêt pour la phase '+(ph.n+1):'Objectif final')+' · '+ok+' sur '+ph.criteres.length+'</div><div class="list">'+rows+'</div>'+(ph.critNote?'<p class="foot">'+esc(ph.critNote)+'</p>':'')}
+  if(ph&&ph.regles&&ph.regles.length)h+='<div class="sec">Méthode</div><div class="list">'+ph.regles.map(function(r){return '<div class="li nc"><span class="grow"><div class="t s13">'+esc(r)+'</div></span></div>'}).join('')+'</div>';
+  var R=d.routines||{},ks=Object.keys(R);if(ks.length)h+='<div class="sec">Échauffements et étirements</div>'+ks.map(function(k){return fgRoutine(R[k],0)}).join('');
+  if(d.gtg&&(d.gtg.figures||[]).some(function(id){var F=fgFig(id);return F&&F.phase===p.phase}))h+=fgGtg(d);
+  return h}
+/* Grease the groove : séries courtes au fil de la journée, regroupées dans une séance du jour */
+function gtgSes(mk){for(var i=S.seances.length-1;i>=0;i--){var x=S.seances[i];if(x.gtg&&x.date===today())return x}
+  if(!mk)return null;var s={id:uid(),type:'renfo',date:today(),sets:[],order:[],note:'',nom:'Grease the groove',gtg:1,duree:0,wu:0,cd:0,z2:0,rpe:null};S.seances.push(s);return s}
+function fgGtg(d){var g=d.gtg,tdy=gtgSes(0),h='<div class="sec">'+esc(g.nom||'Grease the groove')+'</div><div class="list">';
+  (g.figures||[]).forEach(function(fid){var F=fgFig(fid);if(!F)return;var i=fgLvl(fid),L=F.niveaux[i],e=exoByName(L.nom),best=e?prOf(e.id).reps||0:0,
+      u=L.obj&&L.obj.u==='sec'?' s':'',sug=Math.max(1,Math.round((best||(L.obj?L.obj.v:2))/2)),nd=tdy&&e?tdy.sets.filter(function(s){return s.exoId===e.id}).length:0;
+    h+=li({t:esc(L.nom),m:'La moitié de ton record'+(nd?' · '+nd+' série'+(nd>1?'s':'')+' aujourd\'hui':''),r:'<button class="b xs tint" data-act="gtg-add" data-f="'+esc(fid)+'" data-v="'+sug+'">+ '+sug+u+'</button>'})});
+  return h+'</div>'+(g.regles&&g.regles.length?'<p class="foot">'+esc(g.regles.join(' '))+'</p>':'')}
+function gtgAdd(fid,v){var F=fgFig(fid);if(!F)return;var e=prgExo(fgItem(F,fgLvl(fid))),s=gtgSes(1);
+  s.sets.push({id:uid(),exoId:e.id,reps:v,charge:0,rpe:null,pr:false});if(s.order.indexOf(e.id)<0)s.order.push(e.id);recalcPR(s);save();
+  toast('Grease the groove · '+v+(e.unite==='sec'?' s':' reps'));hap('ok');paint()}
+/* reprise des paliers et de l'historique d'une sauvegarde ATELIER ou POLARIS (clé atelier-v1), par alias du fichier programme */
+function fgFind(id){var d=fgD();if(!d)return null;return d.figures.filter(function(f){return f.id===id||(f.alias||[]).indexOf(id)>=0})[0]||null}
+function fgLi(F,lid){for(var i=0;i<F.niveaux.length;i++)if((F.niveaux[i].alias||[]).indexOf(lid)>=0)return i;return -1}
+function fgImport(){var inp=document.createElement('input');inp.type='file';inp.accept='.json,application/json';
+  inp.onchange=function(){var f=inp.files[0];if(!f)return;var rd=new FileReader();
+    rd.onload=function(){var j;try{j=JSON.parse(rd.result)}catch(e){toast('Fichier illisible');return}
+      var st=j&&j.state?j.state:j,pr=st&&st.progression;if(!pr||typeof pr!=='object'){toast('Aucun palier dans ce fichier');return}
+      var lv={},days={},nf=0;
+      Object.keys(pr).forEach(function(k){var F=fgFind(k),q=pr[k];if(!F||!q)return;var i=fgLi(F,q.currentLevel);if(i>=0){lv[F.id]=i;nf++}
+        (q.history||[]).forEach(function(hh){var li2=fgLi(F,hh&&hh.levelId),dt=String(hh&&hh.date||'').slice(0,10);if(li2<0||!/^\d{4}-\d\d-\d\d$/.test(dt))return;
+          (days[dt]=days[dt]||[]).push({F:F,i:li2,a:hh.attempts||[]})})});
+      var dl=Object.keys(days).filter(function(dt){return !S.seances.some(function(x){return x.imp==='atelier'&&x.date===dt})}).sort();
+      if(!nf&&!dl.length){toast('Rien à reprendre pour ce programme');return}
+      ask({t:'Reprendre depuis ATELIER ou POLARIS',m:nf+' palier'+(nf>1?'s':'')+' et '+dl.length+' jour'+(dl.length>1?'s':'')+' d\'essais. Les paliers du fichier remplacent ceux de Carnet.',ok:'Reprendre'}).then(function(ok){if(!ok)return;
+        Object.keys(lv).forEach(function(id){S.fig[id]={i:lv[id],d:today(),h:[[lv[id],today()]]}});
+        dl.forEach(function(dt){var s={id:uid(),type:'renfo',date:dt,sets:[],order:[],note:'',nom:'Reprise ATELIER',imp:'atelier',duree:0,wu:0,cd:0,z2:0,rpe:null};
+          days[dt].forEach(function(r){var e=prgExo(fgItem(r.F,r.i));if(s.order.indexOf(e.id)<0)s.order.push(e.id);
+            r.a.forEach(function(a){var v=+(a&&a.value)||0;if(v>0)s.sets.push({id:uid(),exoId:e.id,reps:v,charge:+(a.weight)||0,rpe:null,pr:false})})});
+          if(s.sets.length){recalcPR(s);S.seances.push(s)}});
+        S.seances.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0});save();toast('Paliers repris');hap('big');paint()})};
+    rd.readAsText(f)};
+  inp.click()}
+/* chrono de maintien : 5 s de mise en place (bips), puis secondes tenues, reportées dans la saisie */
+var HOLD=null;
+function holdOpen(eid){if(HOLD)return;audioInit();wakeOn();var o=document.createElement('div');o.className='hold';o.id='hold';o.setAttribute('role','dialog');o.setAttribute('aria-label','Chrono de maintien');
+  o.innerHTML='<div class="hk" id="hk">Mise en place</div><div class="hv num" id="hv" aria-live="polite">5</div><button class="b pri big" data-act="hold-stop">Stop</button><button class="b gh sm" data-act="hold-x">Annuler</button>';
+  document.body.appendChild(o);HOLD={eid:eid,t0:Date.now()+5000,lb:6,go:0,iv:setInterval(holdTick,100)};holdTick()}
+function holdTick(){if(!HOLD)return;var d=(Date.now()-HOLD.t0)/1000,v=$('#hv'),k=$('#hk');if(!v)return;
+  if(d<0){var s=Math.ceil(-d);if(s!==HOLD.lb){HOLD.lb=s;v.textContent=s;beep(660,.08)}}
+  else{if(!HOLD.go){HOLD.go=1;k.textContent='Tiens';beep(1320,.25);hap('ok')}v.textContent=Math.floor(d)}}
+function holdEnd(keep){if(!HOLD)return;var d=Math.max(0,Math.floor((Date.now()-HOLD.t0)/1000)),el=$('#r_'+HOLD.eid);clearInterval(HOLD.iv);
+  var o=$('#hold');if(o)o.remove();if(keep&&el&&HOLD.go)el.value=d;HOLD=null;hap('tap')}
+/* filet d'erreur : une erreur inattendue propose une sauvegarde de secours, une seule fois */
+function errCatch(){try{if(errCatch._n||!document.body)return;errCatch._n=1;var d=document.createElement('div');d.className='errb';d.id='errb';d.setAttribute('role','alert');
+  d.innerHTML='<span class="grow">Erreur inattendue. Tes données sont en place ; une sauvegarde de secours est conseillée.</span><button class="b xs tint" data-act="err-save">Sauvegarder</button><button class="b xs gh" data-act="err-x">Fermer</button>';
+  document.body.appendChild(d)}catch(e){}}
+window.addEventListener('error',errCatch);window.addEventListener('unhandledrejection',errCatch);
 function prgImport(){
   var inp=document.createElement('input');inp.type='file';inp.accept='.json,application/json';
   inp.onchange=function(){var f=inp.files[0];if(!f)return;var rd=new FileReader();
@@ -3390,20 +3574,23 @@ function vProg(){var d=S.prog&&S.prog.data,p=prgCur();
   if(cv){PG.nolt=1;h+='<div class="zcov"><img class="zbg" src="'+cv+'" alt="">'+
     (lg?'<h1 class="zlg"><img src="'+lg+'" alt="'+esc(d.nom||'Programme')+'"></h1>':'<h1 class="zct">'+esc(d.nom||'Programme')+'</h1>')+
     '<span class="zpill">'+esc(p.nom||'')+'</span></div>'}
-  if(all.length>1)h+='<div class="seg">'+all.map(function(q,i){return '<button data-act="prg-sel" data-v="'+i+'" aria-pressed="'+(q===p)+'">'+esc(q.nom||'Programme '+(i+1))+'</button>'}).join('')+'</div>';
+  if(d.methode==='figures'&&all.length>4)h+=fgSel(all,p);
+  else if(all.length>1)h+='<div class="seg">'+all.map(function(q,i){return '<button data-act="prg-sel" data-v="'+i+'" aria-pressed="'+(q===p)+'">'+esc(q.nom||'Programme '+(i+1))+'</button>'}).join('')+'</div>';
   h+=prgHero(p,nx,0);
   if(p.rythme||d.pas)h+='<p class="foot" style="margin-top:-4px">'+esc([p.rythme,d.pas?'objectif '+Number(d.pas).toLocaleString('fr-FR')+' pas par jour':''].filter(Boolean).join(', '))+'</p>';
+  if(d.methode==='figures')h+=fgView(d,p);
   h+='<div class="sec">Séances</div>';
   p.seances.forEach(function(s){var ls=null;for(var i=S.seances.length-1;i>=0;i--){var x=S.seances[i];if(x.prog&&x.prog.pid===p.id&&x.prog.code===s.code){ls=x;break}}
-    var ph=zImg(s.code),cn=s.exos.filter(function(x){return x.mode!=='mega'}).map(function(x){return (x.reps||[]).length}),N=cn.length&&cn.every(function(c){return c===cn[0]})&&cn[0]>1&&cn[0]<=4?cn[0]:0;
-    var meta='<div class="s12 muted grow">'+s.exos.length+' exercices'+(ls?' · '+dRel(ls.date):'')+'</div>',go='<button class="b xs tint" data-act="prg-start" data-v="'+esc(s.code)+'">Démarrer</button>';
+    var ph=zImg(s.code),cn=prgEx(p,s).filter(function(x){return x.mode!=='mega'}).map(function(x){return (x.reps||[]).length}),N=cn.length&&cn.every(function(c){return c===cn[0]})&&cn[0]>1&&cn[0]<=4?cn[0]:0;
+    var meta='<div class="s12 muted grow">'+prgEx(p,s).length+' exercices'+(ls?' · '+dRel(ls.date):'')+'</div>',go='<button class="b xs tint" data-act="prg-start" data-v="'+esc(s.code)+'">Démarrer</button>';
     h+='<div class="zcard">'+(ph?'<div class="zban"><img class="zbg" src="'+ph+'" alt=""><div class="zbt"><h2 class="zt2">Séance '+esc(s.code)+'</h2><span class="zpill">'+esc(s.nom)+'</span></div></div><div class="zbody"><div class="zmeta">'+meta+go+'</div>':
         '<div class="zh"><span class="zcode">'+esc(s.code)+'</span><div class="grow"><h2>'+esc(s.nom)+'</h2>'+meta+'</div>'+go+'</div><div class="zbody">')+
       (N?'<div class="zth" style="grid-template-columns:repeat('+N+',minmax(0,1fr)) 58px" aria-hidden="true">'+(function(){var a='';for(var i=1;i<=N;i++)a+='<span>Série '+i+'</span>';return a})()+'<span>Repos</span></div>':'')+
-      s.exos.map(function(x){var zi={mode:x.mode||'classique',baisse:+x.baisse||0,reps:x.reps||[],note:x.note||'',fin:x.fin||'',avec:x.avec||''};
+      prgEx(p,s).map(function(x){var zi={mode:x.mode||'classique',baisse:+x.baisse||0,reps:x.reps||[],note:x.note||'',fin:x.fin||'',avec:x.avec||''};
         return '<div class="zx"><span class="zn">'+esc(x.nom)+'</span>'+zRow(zi,+x.repos||0,-1,N)+zNote(zi)+'</div>'}).join('')+'</div></div>'});
   if(p.regles&&p.regles.length)h+='<div class="sec">Règles</div><div class="list">'+p.regles.map(function(r){return '<div class="li nc"><span class="grow"><div class="t s13">'+esc(r)+'</div></span></div>'}).join('')+'</div>';
   if(d.nutrition)h+=prgNut(d.nutrition);
+  if(d.methode==='figures')h+='<div class="list" style="margin-top:20px">'+li({act:'fig-imp',ic:it('trophy','c-hyb'),t:'Reprendre mes paliers ATELIER ou POLARIS',m:'Depuis une sauvegarde JSON de ces apps : paliers et historique des essais',chev:1})+'</div>';
   h+='<div class="list" style="margin-top:20px">'+li({act:'prg-imp',cls:'acc',t:'Remplacer le programme'})+li({act:'prg-del',cls:'red',t:'Retirer le programme'})+'</div>'+
     '<p class="foot">Importé le '+dLong(S.prog.imp)+'. Le fichier reste privé, sur ce téléphone.</p>';
   return h}
@@ -3662,6 +3849,16 @@ document.addEventListener('click',function(ev){
   case 'import': doImport(); break;
   case 'prg-imp': prgImport(); break;
   case 'prg-start': prgStart(b.dataset.v); break;
+  case 'fig-up': {var fF=fgFig(b.dataset.f);if(fF)fgSet(b.dataset.f,fgStep(fF,fgLvl(b.dataset.f),1),1);break}
+  case 'fig-set': fgSet(b.dataset.f,fgLvl(b.dataset.f)+(+b.dataset.v||0),0); break;
+  case 'fig-repli': fgRepli(b.dataset.id); break;
+  case 'fig-imp': fgImport(); break;
+  case 'gtg-add': gtgAdd(b.dataset.f,+b.dataset.v||1); break;
+  case 'hold': holdOpen(b.dataset.id); break;
+  case 'hold-stop': holdEnd(1); break;
+  case 'hold-x': holdEnd(0); break;
+  case 'err-save': doExport(); break;
+  case 'err-x': {var eb=$('#errb');if(eb)eb.remove();break}
   case 'prg-sel': S.prog.sel=+b.dataset.v;save();hap('tap');paint(); break;
   case 'zpro': S.prefs.zpro=+b.dataset.v;S.prefs.zet=0;save();hap('tap');paint(); break;
   case 'zet': S.prefs.zet=+b.dataset.v;save();hap('tap');paint(); break;
