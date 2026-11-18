@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-xxzfNc5iMqCy76+Zq7hWxoQU/gaHaFhrjr2AWwvUS/4='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; media-src 'self' data: blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#000000">
 <meta name="color-scheme" content="dark light">
@@ -825,7 +826,7 @@ function hlong(s){s=Math.round(s/60);var h=Math.floor(s/60),m=s%60;
 function nfmt(v){return (Math.round(v*10)/10).toString().replace('.',',')}
 
 /* ================= STATE ================= */
-var KEY='carnet-v1', SCHEMA=16, VERSION='1.17.0';
+var KEY='carnet-v1', SCHEMA=17, VERSION='1.17.1';
 var SEED=[
  ['Développé couché','Pecs','kg',150,2.5],['Développé incliné','Pecs','kg',150,2.5],['Chest press','Pecs','kg',120,5],
  ['Strict press','Épaules','kg',150,2.5],['Pompes','Pecs','bw',90,0],['Dips','Pecs','bw',120,2.5],
@@ -849,7 +850,18 @@ var MODAL=['Course extérieur','Course tapis','Echo bike','Rameur','Ski erg','V�
 function fresh(){return{schema:SCHEMA,exos:seedExos(),seances:[],blocs:[],modeles:[],cur:null,timer:null,
   prefs:{theme:'auto',rest:120,fcmax:0,w4:0,rpm4:0,vma:0,poids:0,z2goal:180,lock:1,row500:0,ski500:0,age:0,taille:0,mg:0,zpro:1,zet:0,th:thDef()},wod:null,goals:{},prog:null,fig:{},lib:[],rplan:null}}
 function thDef(){return {cmin:20,cver:'rx',cgoal:0,ltop:10,lver:'rx',hset:3,hpu:12,hlr:10,hpp:25,hrest:4,hsq:100,hver:'rx',wset:4,wsw:25,wpp:15,wrest:60,wkg:16,wver:'rx'}}
+/* v1.17.1 (schéma 17) : aucune donnée importée ou stockée ne peut porter de balisage. Les caractères < > " de toute chaîne
+   (sauf images data: validées) deviennent ‹ › ”, à l'import d'un programme ou d'une sauvegarde et à chaque chargement.
+   Idempotent ; neutralise aussi ce qu'une version antérieure aurait enregistré. */
+function cleanS(s){return imgOk(s)?s:s.replace(/[<>"]/g,function(c){return c==='<'?'\u2039':c==='>'?'\u203a':'\u201d'})}
+function clean(o,dp){dp=dp||0;if(typeof o==='string')return cleanS(o);if(!o||typeof o!=='object')return o;if(dp>60)return null;
+  if(Array.isArray(o)){for(var i=0;i<o.length;i++)o[i]=clean(o[i],dp+1);return o}
+  Object.keys(o).forEach(function(k){var v=o[k];delete o[k];if(k==='__proto__'||k==='constructor'||k==='prototype')return;
+    if(k==='reo'&&typeof v==='string'){try{v=JSON.stringify(clean(JSON.parse(v),dp+1))}catch(e){return}}else v=clean(v,dp+1);
+    o[cleanS(k)]=v});
+  return o}
 function migrate(s){
+  clean(s);
   if(!s.prefs)s.prefs={};
   var dp={theme:'auto',rest:120,fcmax:0,w4:0,rpm4:0,vma:0,poids:0,z2goal:180,lock:1,row500:0,ski500:0,age:0,taille:0,mg:0,zpro:1,zet:0};
   for(var k in dp) if(s.prefs[k]===undefined) s.prefs[k]=dp[k];
@@ -1755,7 +1767,9 @@ function promptFallback(t){ openSheet('<h2>Séance</h2><div style="height:10px">
 /* ================= ONBOARDING ================= */
 var KONB='carnet-onb', KVER='carnet-ver';
 /* Registre des nouveautés : une entrée par version, la plus récente en tête. [pictogramme, titre, texte] */
-var NEWS=[{v:'1.17.0',l:[
+var NEWS=[{v:'1.17.1',l:[
+  ['trophy','Sécurité renforcée','Les fichiers programme et les sauvegardes importés ne peuvent plus exécuter de code dans l\'app. Les données déjà enregistrées sont nettoyées au premier lancement.']]},
+  {v:'1.17.0',l:[
   ['pullup','Programmes au poids du corps','Un fichier programme peut décrire des figures par niveaux : objectif de chaque niveau, validation en un geste, critères de passage de phase.'],
   ['stopwatch','Circuits et chrono de maintien','Les circuits tournent seuls d\'un exercice à l\'autre avec les bons repos. Les maintiens ont un chrono avec 5 s de mise en place.'],
   ['trophy','Reprise depuis ATELIER','Les paliers et essais d\'une sauvegarde ATELIER ou POLARIS se reprennent dans Carnet.'],
@@ -2354,7 +2368,7 @@ function tile(k,v,u,s,c){var lg=String(v).replace(/<[^>]+>/g,'').length>7;return
 function it(k,c,sz){return '<span class="it'+(sz?' '+sz:'')+' '+(c||'c-ac')+'">'+ico(k)+'</span>'}
 function itA(k,c,sz){return '<span class="it'+(sz?' '+sz:'')+' '+(c||'c-ac')+'">'+icoA(k)+'</span>'}
 function li(o){
-  return '<div class="li'+(o.ic?' hasic':'')+(o.icsm?' smic':'')+(o.cls?' '+o.cls:'')+(o.act?'':' nc')+'"'+(o.act?' data-act="'+o.act+'"':'')+(o.id?' data-id="'+o.id+'"':'')+(o.extra||'')+'>'+
+  return '<div class="li'+(o.ic?' hasic':'')+(o.icsm?' smic':'')+(o.cls?' '+o.cls:'')+(o.act?'':' nc')+'"'+(o.act?' data-act="'+esc(o.act)+'"':'')+(o.id?' data-id="'+esc(o.id)+'"':'')+(o.extra||'')+'>'+
     (o.ic||'')+'<span class="grow"><div class="t'+(o.sb?' sb':'')+(o.ell?' ell':'')+'">'+o.t+'</div>'+(o.m?'<div class="m">'+o.m+'</div>':'')+(o.after||'')+'</span>'+
     (o.r!==undefined?'<span class="r">'+o.r+'</span>':'')+(o.chev?CH:'')+'</div>';
 }
@@ -2904,7 +2918,7 @@ function vReg(){
 function exoPicker(multi,forEdit){
   var g={},order=[];S.exos.forEach(function(e){if(!g[e.groupe]){g[e.groupe]=[];order.push(e.groupe)}g[e.groupe].push(e)});
   var h='<h2>'+(multi?'Exercices du bloc':'Ajouter un exercice')+'</h2>'+
-    '<input id="pk" placeholder="Rechercher" oninput="filterPick(this.value)" style="margin:12px 0 4px">';
+    '<input id="pk" placeholder="Rechercher" style="margin:12px 0 4px">';
   order.forEach(function(k){h+='<div class="sec pkh">'+esc(k)+'</div><div class="list">'+g[k].map(function(e){var l=lastSetsFor(e.id);
     return '<div class="li hasic pkrow" data-nom="'+esc(e.nom.toLowerCase())+'" data-act="'+(forEdit?'ed-pick':(multi?'pickm':'pick'))+'" data-id="'+e.id+'">'+
       it(exoIco(e),'c-mus')+'<span class="grow"><div class="t">'+esc(e.nom)+'</div><div class="m">'+(l?setLabel(e,l.sets[l.sets.length-1])+' · '+dRel(l.date):'jamais fait')+'</div></span>'+
@@ -2920,6 +2934,7 @@ function listFilter(scope,v){v=String(v||'').toLowerCase().trim();var root=docum
     var hd=l.previousElementSibling;if(hd&&hd.classList.contains('pkh'))hd.style.display=any?'':'none'});
   var no=root.querySelector('#exnone');if(no)no.style.display=total?'none':'';}
 function filterPick(v){listFilter('#sheet',v)}
+document.addEventListener('input',function(e){var x=e.target;if(x&&x.id==='pk')filterPick(x.value)});
 var RPEL={1:'Très facile, récupération',2:'Facile',3:'Aisé, zone 2',4:'Facile, conversation possible',5:'Confortable',6:'Modéré, encore de la marge',7:'Soutenu',8:'Dur, deux ou trois reps en réserve',9:'Très dur, une rep en réserve',10:'Maximal'};
 function rpeSel(id,v){v=+v||0;return '<div class="card rpec"><span class="lbl">Effort perçu (RPE)</span><input type="hidden" id="'+id+'" value="'+(v||'')+'">'+
   '<div class="seg" role="group" aria-label="RPE">'+[1,2,3,4,5,6,7,8,9,10].map(function(n){return '<button data-act="rpe" data-f="'+id+'" data-v="'+n+'" aria-pressed="'+(n===v)+'">'+n+'</button>'}).join('')+'</div>'+
@@ -3431,7 +3446,7 @@ function prgBil(){var p=prgCur();if(!p)return '';var nx=prgNext(p),s=nx.s;if(!s)
   return '<button type="button" class="zbil" data-act="tab" data-t="renfo" aria-label="'+esc((S.prog.data.nom||'Programme')+', prochaine séance '+s.code+', '+prgWeekN(p)+' cette semaine')+'">'+(ph?'<img src="'+ph+'" alt="">':ZBOLT)+
     '<span class="grow" style="min-width:0;text-align:left"><span class="zk">'+esc(S.prog.data.nom||'Programme')+' · à faire</span><b>Séance '+esc(s.code)+'</b><small>'+esc(s.nom)+'</small></span>'+prgWeek(p).replace(/<(\/?)div/g,'<$1span')+'</button>'}
 function prgWeekN(p){var m=monday(today()),n=S.seances.filter(function(x){return x.prog&&x.prog.pid===p.id&&x.date>=m}).length,g=(p.jours&&p.jours.length)||p.seances.length;return n+' sur '+g}
-function prgValid(d){try{if(!d||d.format!=='carnet-programme/1'||!Array.isArray(d.programmes)||!d.programmes.length)return false;
+function prgValid(d){try{if(!d||d.format!=='carnet-programme/1'||!Array.isArray(d.programmes)||!d.programmes.length)return false;clean(d);
   d.programmes.forEach(function(p){if(!p.id||!Array.isArray(p.seances)||!p.seances.length)throw 0;p.id=String(p.id);
     p.seances.forEach(function(s){if(!Array.isArray(s.exos)&&(Array.isArray(s.tt)||Array.isArray(s.circuits)))s.exos=[];
       if(s.code===undefined||s.code===null||!Array.isArray(s.exos))throw 0;s.code=String(s.code);if(!s.nom)s.nom='Séance '+s.code;
@@ -3461,7 +3476,7 @@ function fgFig(id){var d=fgD();if(!d)return null;for(var i=0;i<d.figures.length;
 function fgPh(n){var d=fgD();return d&&d.phases?d.phases.filter(function(x){return x.n===n})[0]||null:null}
 function fgLvl(id){var F=fgFig(id),z=S.fig&&S.fig[id];if(!F)return 0;return Math.max(0,Math.min(F.niveaux.length-1,z?+z.i||0:0))}
 function fgU(u){return u==='sec'?'sec':'bw'}
-function fgObj(o){return o.v+(o.u==='sec'?' s':' reps')+(o.cote?' par côté':'')}
+function fgObj(o){return esc(o.v)+(o.u==='sec'?' s':' reps')+(o.cote?' par côté':'')}
 function fgLbl(v,u,cote){return v===null||v===undefined?'—':(String(v).toUpperCase()==='MAX'?'Max':v+(u==='sec'?' s':''))+(cote?' /côté':'')}
 function fgItem(F,i){var L=F.niveaux[i],u=L.obj?L.obj.u:(L.u||'reps');return {nom:L.nom,groupe:F.nom,unite:fgU(u),ic:F.ic||''}}
 function fgFigs(p){var d=fgD(),ph=fgPh(p.phase);if(!d)return [];
@@ -3507,7 +3522,7 @@ function fgHint(zi,ws,eid){if(zi.fig===undefined)return '';var F=fgFig(zi.fig);i
   return h}
 function fgSel(all,p){var phs=[];all.forEach(function(q){if(phs.indexOf(q.phase)<0)phs.push(q.phase)});
   function first(n){for(var i=0;i<all.length;i++)if(all[i].phase===n)return i;return 0}
-  var h='<div class="seg">'+phs.map(function(n){var P=fgPh(n);return '<button data-act="prg-sel" data-v="'+first(n)+'" aria-pressed="'+(p.phase===n)+'" aria-label="Phase '+n+(P?', '+esc(P.nom):'')+'">Phase '+n+'</button>'}).join('')+'</div>';
+  var h='<div class="seg">'+phs.map(function(n){var P=fgPh(n);return '<button data-act="prg-sel" data-v="'+esc(first(n))+'" aria-pressed="'+(p.phase===n)+'" aria-label="Phase '+esc(n)+(P?', '+esc(P.nom):'')+'">Phase '+n+'</button>'}).join('')+'</div>';
   var sub=[];all.forEach(function(q,i){if(q.phase===p.phase)sub.push([q,i])});
   if(sub.length>1)h+='<div class="seg">'+sub.map(function(x){var nm=String(x[0].nom||'').replace(/^Phase\s*\d+\s*/,'').replace(/^·\s*/,'');
     return '<button data-act="prg-sel" data-v="'+x[1]+'" aria-pressed="'+(x[0]===p)+'" aria-label="'+esc(x[0].nom||'')+'">'+esc(nm||x[0].nom)+'</button>'}).join('')+'</div>';
@@ -3531,7 +3546,7 @@ function fgRoutine(r,open){if(!r)return '';return '<details class="card fgr"'+(o
 function fgRout(c,k){var d=fgD();if(!d||!c.prog||!c.prog[k]||!c.prog[k].length)return '';var R=d.routines||{};
   return c.prog[k].map(function(id){return fgRoutine(R[id],0)}).join('')}
 function fgView(d,p){var ph=fgPh(p.phase),h='';
-  h+='<div class="sec">'+(ph?'Phase '+ph.n+' · '+esc(ph.nom):'Progressions')+'</div><div class="list">';
+  h+='<div class="sec">'+(ph?'Phase '+esc(ph.n)+' · '+esc(ph.nom):'Progressions')+'</div><div class="list">';
   fgFigs(p).forEach(function(F){var i=fgLvl(F.id),L=F.niveaux[i],n=F.niveaux.length,dots='';
     for(var k=0;k<n;k++)dots+='<i class="'+(k<i?'ok':(k===i?'on':''))+(F.niveaux[k].opt?' op':'')+'"></i>';
     h+='<div class="li nc fgl"><span class="grow"><div class="t sb">'+esc(F.nom)+(F.bonus?' <span class="tag">bonus</span>':'')+'</div>'+
@@ -3910,7 +3925,7 @@ function fgCard(F){var i=fgLvl(F.id),n=F.niveaux.length,dots='';
     (nt?'<p class="s13 muted" style="margin:0 16px 10px;line-height:1.4">'+esc(nt)+'</p>':'')+'<div class="list">'+rows+'</div></details>'}
 function fgAll(d,p){var h='';
   (d.phases||[]).forEach(function(ph){
-    h+='<div class="sec">Phase '+ph.n+' · '+esc(ph.nom||'')+(ph.n===p.phase?' <span class="tag ac">en cours</span>':'')+'</div>';
+    h+='<div class="sec">Phase '+esc(ph.n)+' · '+esc(ph.nom||'')+(ph.n===p.phase?' <span class="tag ac">en cours</span>':'')+'</div>';
     if(ph.tt)h+='<p class="foot" style="margin-top:-4px">'+esc(fgTT(ph.tt))+'</p>';
     var ids=ph.figures||d.figures.filter(function(f){return f.phase===ph.n}).map(function(f){return f.id});
     ids.map(fgFig).filter(Boolean).forEach(function(F){h+=fgCard(F)});
@@ -3924,7 +3939,7 @@ function circSes(cid){var d=fgD(),C=d&&d.circuits&&d.circuits[cid];if(!C)return 
 function circAll(d){var C=d.circuits||{},h='<p class="foot" style="margin-top:0">Tous les circuits du programme. Chacun se lance seul, sans décaler la prochaine séance.</p>';
   Object.keys(C).forEach(function(cid){var c=C[cid],ph=circUse(d,cid),np=(c.parties||[]).length;
     h+='<details class="card fgr"><summary><span class="grow" style="min-width:0"><b>'+esc(c.nom||cid)+'</b><span class="s12 dim" style="display:block;margin-top:3px">'+
-      (ph.length?'Phase '+ph.join(' et '):'Hors séances')+(np>1?' · '+np+' parties':'')+'</span></span></summary>'+
+      (ph.length?'Phase '+esc(ph.join(' et ')):'Hors séances')+(np>1?' · '+np+' parties':'')+'</span></span></summary>'+
       (c.parties||[]).map(function(P){var t=[(+P.tours||1)+' tour'+((+P.tours||1)>1?'s':''),P.pexos?restTxt(P.pexos)+' entre exercices':'',P.ptours?restTxt(P.ptours)+' entre tours':''].filter(Boolean).join(', ');
         return '<div class="fgp"><b>'+esc(P.nom||'Circuit')+'</b><span>'+esc(t)+'</span></div><div class="list">'+(P.exos||[]).map(function(X){var F=X.fig?fgFig(X.fig):null,nm=X.nom||'';
             if(F&&(X.mode==='courant'||X.mode==='inferieur')){var i=fgLvl(X.fig);if(X.mode==='inferieur')i=Math.max(0,i-1);nm=F.niveaux[i].nom+(X.mode==='inferieur'?' (un niveau sous le tien)':' (ton niveau)')}
@@ -3941,7 +3956,7 @@ function methView(d){var P=d.principes,h='';
     '<div class="list">'+P.items.map(function(x,i){return '<div class="li nc fgv"><span class="fgn num">'+(i+1)+'</span><span class="grow"><div class="t sb">'+esc(x.t)+'</div><div class="m">'+esc(x.d||'')+'</div></span></div>'}).join('')+'</div>';
   if(P&&P.boucle)h+='<div class="sec">'+esc(P.boucle.titre||'Boucle')+'</div><ol class="card fgol">'+(P.boucle.etapes||[]).map(function(e){return '<li>'+esc(e)+'</li>'}).join('')+'</ol>'+
     (P.boucle.note?'<p class="foot">'+esc(P.boucle.note)+'</p>':'');
-  (d.phases||[]).forEach(function(ph){if(ph.regles&&ph.regles.length)h+='<div class="sec">Phase '+ph.n+' · '+esc(ph.nom||'')+'</div>'+(ph.tt?'<p class="foot" style="margin-top:-4px">'+esc(fgTT(ph.tt))+'</p>':'')+
+  (d.phases||[]).forEach(function(ph){if(ph.regles&&ph.regles.length)h+='<div class="sec">Phase '+esc(ph.n)+' · '+esc(ph.nom||'')+'</div>'+(ph.tt?'<p class="foot" style="margin-top:-4px">'+esc(fgTT(ph.tt))+'</p>':'')+
     '<div class="list">'+ph.regles.map(function(r){return pgRow('',r)}).join('')+'</div>'});
   if(d.gtg)h+='<div class="sec">'+esc(d.gtg.nom||'Grease the groove')+'</div><div class="list">'+(d.gtg.regles||[]).map(function(r){return pgRow('',r)}).join('')+
     ((d.gtg.rythmes||[]).length?pgRow('Rythmes possibles',d.gtg.rythmes.join(' ; ')+'.'):'')+'</div>';
@@ -3949,8 +3964,8 @@ function methView(d){var P=d.principes,h='';
   if(d.source)h+='<p class="foot">'+esc(d.source)+'</p>';
   return h||'<p class="foot">Aucun contenu de méthode dans ce fichier.</p>'}
 /* Nutrition : calculateur (paramètres du fichier), protéines par kilo, assiette, journée type, menus, repas dehors, sections, FAQ */
-function nutMac(m){return m&&m.length===3?'G '+m[0]+' · P '+m[1]+' · L '+m[2]:''}
-function nutRepas(r){return li({t:esc(r.nom),m:esc((r.items||[]).join(', '))+(r.mac?'<br><span class="dim">'+nutMac(r.mac)+'</span>':''),r:r.kcal?'<span class="s13 sb">'+r.kcal+' kcal</span>':''})}
+function nutMac(m){return m&&m.length===3?'G '+esc(m[0])+' · P '+esc(m[1])+' · L '+esc(m[2]):''}
+function nutRepas(r){return li({t:esc(r.nom),m:esc((r.items||[]).join(', '))+(r.mac?'<br><span class="dim">'+nutMac(r.mac)+'</span>':''),r:r.kcal?'<span class="s13 sb">'+esc(r.kcal)+' kcal</span>':''})}
 function nutDet(t,body,open,sub){return '<details class="card fgr"'+(open?' open':'')+'><summary><span class="grow" style="min-width:0"><b>'+esc(t)+'</b>'+(sub?'<span class="s12 dim" style="display:block;margin-top:3px">'+sub+'</span>':'')+'</span></summary>'+body+'</details>'}
 function nutView(n){var p=S.prefs,h='';if(!n)return '';
   if(n.titre)h+='<div class="sec" style="margin-top:4px">'+esc(n.titre)+'</div>';
@@ -3963,7 +3978,7 @@ function nutView(n){var p=S.prefs,h='';if(!n)return '';
   if(n.assiette&&n.assiette.parts){var A=n.assiette;
     h+='<div class="sec">'+esc(A.nom||'Assiette')+'</div><div class="card"><div class="nbar" role="img" aria-label="'+esc(A.parts.map(function(x){return x[0]+' '+x[1]+' %'}).join(', '))+'">'+
       A.parts.map(function(x,i){return '<i class="n'+(i%4)+'" style="flex:'+(+x[1]||0)+'"></i>'}).join('')+'</div><div class="nleg">'+
-      A.parts.map(function(x,i){return '<span><i class="n'+(i%4)+'"></i>'+esc(x[0])+' <b>'+x[1]+' %</b></span>'}).join('')+'</div>'+
+      A.parts.map(function(x,i){return '<span><i class="n'+(i%4)+'"></i>'+esc(x[0])+' <b>'+esc(x[1])+' %</b></span>'}).join('')+'</div>'+
       (A.note?'<p class="s13 muted" style="margin:10px 0 0;line-height:1.4">'+esc(A.note)+'</p>':'')+'</div>'+
       (A.detail?'<div class="list">'+A.detail.map(function(x){return pgRow(x.t,x.d)}).join('')+'</div>':'')}
   if(n.journee&&n.journee.length)h+='<div class="sec">Journée type</div><div class="list">'+n.journee.map(function(x){
