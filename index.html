@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-0p1IRZ8Bk/eFQa2z1AwnGDKpJQIu4YaVk4dZSxLIn9s='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; media-src 'self' data: blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-E3EXzBuCl8e5aSUJRCLKcXFsBiEwnN/lpt6wyhCnADc='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; media-src 'self' data: blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#000000">
 <meta name="color-scheme" content="dark light">
@@ -165,9 +165,11 @@ input::placeholder,textarea::placeholder{color:var(--tx3)}
   transition:clip-path .42s var(--ez),transform .42s var(--ez)}
 body.navmin .nav{clip-path:inset(0 calc(100% - 60px) 0 0 round 30px);transform:translateX(2px)}
 .nav button{transition:opacity .22s var(--ez-out),transform .42s var(--ez),color .18s}
-body.navmin .nav button:not([aria-current="true"]){opacity:0;pointer-events:none;visibility:hidden;transition:opacity .22s var(--ez-out),visibility 0s .22s}
-body.navmin .nav button[aria-current="true"]{transform:translateX(calc(-1 * var(--cx,0px)))}
-body.navmin .nav button span.lb{opacity:0}
+body.navmin .nav button:not([aria-current="true"]){opacity:0;pointer-events:none;visibility:hidden;transition:opacity .1s linear,visibility 0s .1s}
+body.navmin .nav button[aria-current="true"]{position:absolute;left:4px;top:4px;width:52px;height:52px;margin:0;border-radius:50%;padding:0;gap:0;transform:none;animation:navbub .3s var(--ez) .06s both}
+body.navmin .nav button[aria-current="true"] svg{width:24px;height:24px}
+body.navmin .nav button span.lb,body.navmin .nav .dotlive{display:none}
+@keyframes navbub{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
 .nav button span.lb{transition:opacity .2s}
 body.run .nav{display:none}
 .nav button{flex:1;background:none;border:0;color:var(--tx3);display:flex;flex-direction:column;
@@ -882,7 +884,7 @@ function hlong(s){s=Math.round(s/60);var h=Math.floor(s/60),m=s%60;
 function nfmt(v){return (Math.round(v*10)/10).toString().replace('.',',')}
 
 /* ================= STATE ================= */
-var KEY='carnet-v1', SCHEMA=18, VERSION='1.18.1';
+var KEY='carnet-v1', SCHEMA=18, VERSION='1.18.2';
 /* ================= HALTÉROPHILIE (schéma 18) =================
    RM1 par mouvement (S.halt.rm[k]={v,d}), matériel (barre, colliers, disques cochés), constructeur de séance par blocs en % du RM1,
    programmes « methode:'pct' » (chaque exercice : hm = RM de référence, pct[] par série), partage en % par fichier ou lien (#p=).
@@ -1844,7 +1846,9 @@ function promptFallback(t){ openSheet('<h2>Séance</h2><div style="height:10px">
 /* ================= ONBOARDING ================= */
 var KONB='carnet-onb', KVER='carnet-ver', KNVU='carnet-notes-vu', MAJDE='';
 /* Registre des nouveautés : une entrée par version, la plus récente en tête. [pictogramme, titre, texte] */
-var NEWS=[{v:'1.18.1',l:[
+var NEWS=[{v:'1.18.2',l:[
+  ['stopwatch','Barre d\'onglets repliée','En faisant défiler, la barre se replie en une bulle ronde qui montre l\'onglet en cours, icône bien centrée. Touche la bulle pour la rouvrir.']]},
+  {v:'1.18.1',l:[
   ['dumbbell','Nutrition plus lisible','L\'onglet Nutrition se découpe en rubriques : tes chiffres d\'abord (cible du jour et macros), puis la journée type ou l\'assiette, les menus avec celui qui colle à ta cible déjà ouvert, les repères et les questions. Chaque plat a son pictogramme.'],
   ['pullup','Programmes intégrés','Deux programmes écrits pour Carnet, prêts à démarrer depuis Renfo : Muscle · Bases solides (avec sa nutrition, ses menus et la liste de courses) et Poids du corps · Progressions (niveaux par mouvement, phases, circuits). Les programmes externes s\'ajoutent à côté.'],
   ['trophy','Notes de version','Après une mise à jour, une carte en tête de l\'Accueil ouvre directement les notes. Elles restent consultables dans Réglages > Notes de version, version par version.'],
