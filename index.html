@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-6pHC8lwajRJWP0j8vOiOQusbNLoi/hQc3eF+vw75Ahc='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; media-src 'self' data: blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-SpjkZGENXjw3B2FXhPSN7OyTyqLggY6OvA6bP6qBOgU='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; media-src 'self' data: blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#000000">
 <meta name="color-scheme" content="dark light">
@@ -787,7 +787,25 @@ ol.fgol{margin:0 0 14px;padding:14px 16px 14px 36px;font-size:14px;line-height:1
 .nbar i,.nleg i{display:block;background:var(--ac)}.nbar .n1,.nleg .n1{background:var(--acf)}.nbar .n2,.nleg .n2{background:var(--tx3)}.nbar .n3,.nleg .n3{background:#C9A24A}
 .nleg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px;font-size:13px;color:var(--tx2)}.nleg span{display:inline-flex;align-items:center;gap:6px}.nleg b{color:var(--tx);font-weight:650}
 .nleg i{width:10px;height:10px;border-radius:3px}
-.nj{align-items:flex-start}.nj .m{margin:0 0 3px}.nh{flex:none;width:86px;font-size:13px;font-weight:650;color:var(--ac);padding-top:1px}
+.nj{align-items:flex-start}.nj .m{margin:0 0 3px}.nsub{display:flex;gap:2px;margin:-6px 0 14px;border-bottom:1px solid var(--sep);overflow-x:auto;scrollbar-width:none}
+.nsub::-webkit-scrollbar{display:none}
+.nsub button{flex:1 0 auto;border:0;background:transparent;color:var(--tx2);font:inherit;font-size:13.5px;font-weight:600;padding:9px 6px 10px;min-height:40px;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .2s,border-color .2s}
+.nsub button[aria-selected="true"]{color:var(--tx);border-bottom-color:var(--ac)}
+.nhero .k{font-size:13px;color:var(--tx2);font-weight:560}
+.nhero .v{font-family:var(--disp);font-weight:800;font-size:40px;line-height:1.05;margin-top:4px}
+.nhero .v small{font-family:var(--sans);font-size:15px;color:var(--tx2);font-weight:520;margin-left:4px}
+.nhero .s{font-size:13px;color:var(--tx2);margin-top:4px}
+.nmac{margin-top:14px;display:grid;gap:10px}
+.nmac>div{display:grid;grid-template-columns:76px 1fr auto;align-items:center;gap:10px;font-size:13px}
+.nmac span{color:var(--tx2);font-weight:560}
+.nmac b{font-family:var(--disp);font-weight:800;font-size:18px;text-align:right;min-width:62px}
+.nmac b small{font-family:var(--sans);font-size:12px;color:var(--tx2);font-weight:520;margin-left:2px}
+.nmac i{display:block;height:8px;border-radius:4px;background:var(--el3);overflow:hidden}
+.nmac i em{display:block;height:100%;border-radius:4px}
+.nmac .q0 em{background:var(--ac)}.nmac .q1 em{background:#D9A441}.nmac .q2 em{background:#A58FD0}
+.nt{font-size:15px;color:var(--tx);line-height:1.4}
+.nkc{font-family:var(--disp);font-weight:800;font-size:15px;white-space:nowrap}
+.nh{flex:none;width:86px;font-size:13px;font-weight:650;color:var(--ac);padding-top:1px}
 .rph .rpk,.capcta .rpk{display:block;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ac)}
 .rpt{font-family:var(--disp);font-weight:800;font-size:22px;line-height:1.1;margin:2px 0;text-transform:uppercase;letter-spacing:-.01em}
 .rph .btns,.capcta .btns{display:flex;gap:8px}.rph .btns .b{flex:1}
@@ -851,7 +869,7 @@ function hlong(s){s=Math.round(s/60);var h=Math.floor(s/60),m=s%60;
 function nfmt(v){return (Math.round(v*10)/10).toString().replace('.',',')}
 
 /* ================= STATE ================= */
-var KEY='carnet-v1', SCHEMA=18, VERSION='1.18.0';
+var KEY='carnet-v1', SCHEMA=18, VERSION='1.18.1';
 /* ================= HALTÉROPHILIE (schéma 18) =================
    RM1 par mouvement (S.halt.rm[k]={v,d}), matériel (barre, colliers, disques cochés), constructeur de séance par blocs en % du RM1,
    programmes « methode:'pct' » (chaque exercice : hm = RM de référence, pct[] par série), partage en % par fichier ou lien (#p=).
@@ -1813,7 +1831,9 @@ function promptFallback(t){ openSheet('<h2>Séance</h2><div style="height:10px">
 /* ================= ONBOARDING ================= */
 var KONB='carnet-onb', KVER='carnet-ver';
 /* Registre des nouveautés : une entrée par version, la plus récente en tête. [pictogramme, titre, texte] */
-var NEWS=[{v:'1.18.0',l:[
+var NEWS=[{v:'1.18.1',l:[
+  ['dumbbell','Nutrition plus lisible','L\'onglet Nutrition se découpe en rubriques : tes chiffres d\'abord (cible du jour et macros), puis la journée type ou l\'assiette, les menus avec celui qui colle à ta cible déjà ouvert, les repères et les questions.']]},
+  {v:'1.18.0',l:[
   ['deadlift','Haltérophilie','Saisis tes RM1, puis construis ta séance en blocs : un mouvement, un pourcentage, séries × reps. La charge s\'affiche aussitôt, arrondie à tes disques, avec le détail par côté.'],
   ['trophy','Programmes en %','Deux programmes intégrés, Initiation 8 semaines et Force 6 semaines, et les programmes de club importés : les charges suivent tes RM1.'],
   ['stopwatch','Programmation du club','Le coach partage ses séances en % par lien ou par fichier. Chacun les importe et obtient ses propres charges, sans compte ni serveur.']]},
@@ -4190,34 +4210,69 @@ function methView(d){var P=d.principes,h='';
   if(d.source)h+='<p class="foot">'+esc(d.source)+'</p>';
   return h||'<p class="foot">Aucun contenu de méthode dans ce fichier.</p>'}
 /* Nutrition : calculateur (paramètres du fichier), protéines par kilo, assiette, journée type, menus, repas dehors, sections, FAQ */
-function nutMac(m){return m&&m.length===3?'G '+esc(m[0])+' · P '+esc(m[1])+' · L '+esc(m[2]):''}
-function nutRepas(r){return li({t:esc(r.nom),m:esc((r.items||[]).join(', '))+(r.mac?'<br><span class="dim">'+nutMac(r.mac)+'</span>':''),r:r.kcal?'<span class="s13 sb">'+esc(r.kcal)+' kcal</span>':''})}
-function nutDet(t,body,open,sub){return '<details class="card fgr"'+(open?' open':'')+'><summary><span class="grow" style="min-width:0"><b>'+esc(t)+'</b>'+(sub?'<span class="s12 dim" style="display:block;margin-top:3px">'+sub+'</span>':'')+'</span></summary>'+body+'</details>'}
+function nutMac(m){return m&&m.length===3?'Prot. '+esc(m[1])+' g · Gluc. '+esc(m[0])+' g · Lip. '+esc(m[2])+' g':''}
+function nutRepas(r){return li({t:esc(r.nom),m:esc((r.items||[]).join(', '))+(r.mac?'<br><span class="dim">'+nutMac(r.mac)+'</span>':''),r:r.kcal?'<span class="nkc">'+esc(r.kcal)+' kcal</span>':''})}
+function nutTxt(x){return '<div class="li nc"><span class="grow"><div class="nt">'+esc(x)+'</div></span></div>'}
+function nutDet(t,body,open,sub,right){return '<details class="card fgr"'+(open?' open':'')+'><summary><span class="grow" style="min-width:0"><b>'+t+'</b>'+(sub?'<span class="s12 dim" style="display:block;margin-top:3px">'+sub+'</span>':'')+'</span>'+(right||'')+'</summary>'+body+'</details>'}
+var NUTV='calc';
+function nutParts(n){var r=[];
+  if((n.protocoles&&n.protocoles.length)||(n.proteinesKg&&n.proteinesKg.length===2))r.push(['calc','Chiffres']);
+  if((n.journee&&n.journee.length)||(n.assiette&&n.assiette.parts))r.push(['jour',n.journee&&n.journee.length?'Journée':'Assiette']);
+  if((n.menus&&n.menus.length)||(n.exterieur&&n.exterieur.length))r.push(['menus','Menus']);
+  if(n.sections&&n.sections.length)r.push(['rep','Repères']);
+  if(n.faq&&n.faq.length)r.push(['faq','Questions']);return r}
+function nutBest(n){var p=S.prefs;if(!(n.menus&&n.menus.length&&n.protocoles&&n.protocoles.length))return {i:-1};
+  var k=Math.max(0,Math.min(n.protocoles.length-1,(+p.zpro||1)-1)),r=nutCalc(n,n.protocoles[k],+p.zet||0);if(!r.ok)return {i:-1};
+  var best=-1,dm=1e9;n.menus.forEach(function(m,i){var dd=Math.abs((+m.kcal||0)-r.cible);if(dd<dm){dm=dd;best=i}});return {i:best,c:Math.round(r.cible)}}
+function nutProfil(n){var p=S.prefs,full=p.age>0&&p.taille>0&&p.poids>0,
+  L='<div class="list"'+(full?' style="margin:0 0 6px"':'')+'>'+prow('age','Âge','ans',p.age)+prow('taille','Taille','cm',p.taille)+prow('poids','Poids','kg',p.poids,'',1)+
+    prow('mg','Masse grasse estimée','%',p.mg,'photos et miroir, sans se sous-estimer',1)+'</div>';
+  if(!full)return '<div class="sec">Ton profil</div>'+L;
+  return '<div class="sec">Ton profil</div>'+nutDet('Âge, taille, poids, masse grasse',L,0,esc([p.age+' ans',p.taille+' cm',String(p.poids).replace('.',',')+' kg',p.mg?'MG '+String(p.mg).replace('.',',')+' %':'MG non renseignée'].join(' · ')))}
+function prgNut(n){var p=S.prefs,pr=n.protocoles||[];if(!pr.length)return '';
+  var k=Math.max(0,Math.min(pr.length-1,(+p.zpro||1)-1)),P=pr[k],r=nutCalc(n,P,+p.zet||0),h='';
+  if(r.ok){var tot=r.prot*4+r.lip*9+r.glu*4||1;
+    h+='<div class="card nhero"><div class="k">Cible du jour</div><div class="v">'+Math.round(r.cible)+'<small>kcal</small></div>'+
+      '<div class="s">Maintien '+Math.round(r.maint)+' kcal · '+(r.ec?(r.ec>0?'+':'−')+Math.abs(r.ec)+' kcal':'au maintien')+(r.n>1?' · '+(r.et?'étape '+r.et:'départ'):'')+'</div>'+
+      '<div class="nmac">'+[['Protéines',r.prot,4],['Glucides',r.glu,4],['Lipides',r.lip,9]].map(function(x,i){var pc=Math.round(x[1]*x[2]/tot*100);
+        return '<div class="q'+i+'"><span>'+x[0]+'</span><i role="img" aria-label="'+pc+' % des calories"><em style="width:'+pc+'%"></em></i><b>'+Math.round(x[1])+'<small>g</small></b></div>'}).join('')+'</div></div>';
+    var bm=nutBest(n);if(bm.i>=0)h+='<div class="list">'+li({act:'nutv',extra:' data-v="menus"',t:'Menu type : '+esc(n.menus[bm.i].nom),m:'Le plus proche de ta cible ('+esc(n.menus[bm.i].kcal)+' kcal)',chev:1})+'</div>'}
+  else h+='<p class="foot" style="margin-top:0">'+r.msg+'</p>'+nutProfil(n);
+  h+='<div class="sec">Protocole</div><div class="card"><div class="seg" style="margin-bottom:10px">'+pr.map(function(q,i){
+    return '<button data-act="zpro" data-v="'+(i+1)+'" aria-pressed="'+(i===k)+'" aria-label="'+esc(q.nom)+'">'+esc(q.n||i+1)+'</button>'}).join('')+'</div>'+
+    '<div class="zpn">'+esc(P.nom||'')+'</div>'+(P.desc?'<p class="s13 muted" style="margin:6px 0 0;line-height:1.4">'+esc(P.desc)+'</p>':'');
+  if(r.ok&&r.n>1)h+='<div class="seg" style="margin:12px 0 0">'+P.ecarts.map(function(x,i){
+    return '<button data-act="zet" data-v="'+i+'" aria-pressed="'+(i===r.et)+'">'+(i?'Étape '+i:'Départ')+'</button>'}).join('')+'</div>'+
+    '<p class="s12 dim" style="margin:10px 0 0;line-height:1.4">Passe à l\'étape suivante seulement si le poids stagne deux semaines.</p>';
+  h+='</div>';
+  if(r.ok&&r.nomg)h+='<p class="foot" style="margin-top:-4px">Masse grasse non renseignée : calcul sur le poids total.</p>';
+  return h+(r.ok?nutProfil(n):'')}
 function nutView(n){var p=S.prefs,h='';if(!n)return '';
-  if(n.titre)h+='<div class="sec" style="margin-top:4px">'+esc(n.titre)+'</div>';
-  if(n.intro)h+='<p class="foot" style="margin-top:-4px">'+esc(n.intro)+'</p>';
-  if(n.protocoles&&n.protocoles.length)h+=prgNut(n);
-  if(n.proteinesKg&&n.proteinesKg.length===2){var w=+p.poids||0,a=n.proteinesKg;
-    h+='<div class="sec">Protéines par jour</div><div class="list">'+prow('poids','Poids','kg',p.poids,'',1)+'</div>'+
-      (w>0?'<div class="grid">'+[['Bas',a[0]],['Haut',a[1]]].map(function(x){return '<div class="tile"><div class="k">'+x[0]+'</div><div class="v">'+Math.round(w*x[1])+'<span class="u">g</span></div><div class="s">'+String(x[1]).replace('.',',')+' g par kilo</div></div>'}).join('')+'</div>':
-        '<p class="foot">Renseigne ton poids pour calculer.</p>')}
-  if(n.assiette&&n.assiette.parts){var A=n.assiette;
-    h+='<div class="sec">'+esc(A.nom||'Assiette')+'</div><div class="card"><div class="nbar" role="img" aria-label="'+esc(A.parts.map(function(x){return x[0]+' '+x[1]+' %'}).join(', '))+'">'+
-      A.parts.map(function(x,i){return '<i class="n'+(i%4)+'" style="flex:'+(+x[1]||0)+'"></i>'}).join('')+'</div><div class="nleg">'+
-      A.parts.map(function(x,i){return '<span><i class="n'+(i%4)+'"></i>'+esc(x[0])+' <b>'+esc(x[1])+' %</b></span>'}).join('')+'</div>'+
-      (A.note?'<p class="s13 muted" style="margin:10px 0 0;line-height:1.4">'+esc(A.note)+'</p>':'')+'</div>'+
-      (A.detail?'<div class="list">'+A.detail.map(function(x){return pgRow(x.t,x.d)}).join('')+'</div>':'')}
-  if(n.journee&&n.journee.length)h+='<div class="sec">Journée type</div><div class="list">'+n.journee.map(function(x){
-    return '<div class="li nc nj"><span class="nh">'+esc(x.h)+'</span><span class="grow">'+(x.items||[]).map(function(t){return '<div class="m">'+esc(t)+'</div>'}).join('')+'</span></div>'}).join('')+'</div>';
-  if(n.menus&&n.menus.length){var best=-1,cb=0;
-    if(n.protocoles&&n.protocoles.length){var k=Math.max(0,Math.min(n.protocoles.length-1,(+p.zpro||1)-1)),r=nutCalc(n,n.protocoles[k],+p.zet||0);
-      if(r.ok){cb=Math.round(r.cible);var dm=1e9;n.menus.forEach(function(m,i){var dd=Math.abs((+m.kcal||0)-r.cible);if(dd<dm){dm=dd;best=i}})}}
-    h+='<div class="sec">Menus types</div>'+(best>=0?'<p class="foot" style="margin-top:-4px">Le plus proche de ta cible de '+cb+' kcal : '+esc(n.menus[best].nom)+'. Ajuste avec les glucides.</p>':'')+
-      n.menus.map(function(m,i){return nutDet(m.nom+(i===best?' · ta cible':''),'<div class="list">'+(m.repas||[]).map(nutRepas).join('')+'</div>',0,
-        esc([m.kcal?'≈ '+m.kcal+' kcal':'',nutMac(m.mac)].filter(Boolean).join(' · ')))}).join('')}
-  if(n.exterieur&&n.exterieur.length)h+=nutDet('Repas à l\'extérieur','<div class="list">'+n.exterieur.map(nutRepas).join('')+'</div>',0,n.exterieur.length+' options');
-  if(n.sections&&n.sections.length)h+='<div class="sec">Repères</div>'+n.sections.map(function(x){return nutDet(x.t,'<div class="list">'+(x.items||[]).map(function(t){return pgRow('',t)}).join('')+'</div>',0,'')}).join('');
-  if(n.faq&&n.faq.length)h+='<div class="sec">Questions fréquentes</div><div class="list">'+n.faq.map(function(x){return pgRow(x.q,x.r)}).join('')+'</div>';
+  var parts=nutParts(n);if(!parts.some(function(x){return x[0]===NUTV}))NUTV=parts.length?parts[0][0]:'calc';
+  if(parts.length>1)h+='<div class="nsub" role="tablist" aria-label="Rubriques nutrition">'+parts.map(function(x){return '<button role="tab" data-act="nutv" data-v="'+x[0]+'" aria-selected="'+(NUTV===x[0])+'">'+x[1]+'</button>'}).join('')+'</div>';
+  if(NUTV==='calc'){
+    if(n.titre||n.intro)h+='<div class="card" style="padding:12px 16px">'+(n.titre?'<div class="zpn">'+esc(n.titre)+'</div>':'')+(n.intro?'<p class="s12 muted" style="margin:'+(n.titre?'4px':'0')+' 0 0;line-height:1.4">'+esc(n.intro)+'</p>':'')+'</div>';
+    if(n.protocoles&&n.protocoles.length)h+=prgNut(n);
+    if(n.proteinesKg&&n.proteinesKg.length===2){var w=+p.poids||0,a=n.proteinesKg;
+      h+='<div class="sec">Protéines par jour</div>'+(w>0?'<div class="grid">'+[['Bas',a[0]],['Haut',a[1]]].map(function(x){return '<div class="tile"><div class="k">'+x[0]+'</div><div class="v">'+Math.round(w*x[1])+'<span class="u">g</span></div><div class="s">'+String(x[1]).replace('.',',')+' g par kilo</div></div>'}).join('')+'</div>':'')+
+        '<div class="list">'+prow('poids','Poids','kg',p.poids,w>0?'':'renseigne-le pour calculer',1)+'</div>'}}
+  if(NUTV==='jour'){
+    if(n.assiette&&n.assiette.parts){var A=n.assiette;
+      h+='<div class="sec" style="margin-top:4px">'+esc(A.nom||'Assiette')+'</div><div class="card"><div class="nbar" role="img" aria-label="'+esc(A.parts.map(function(x){return x[0]+' '+x[1]+' %'}).join(', '))+'">'+
+        A.parts.map(function(x,i){return '<i class="n'+(i%4)+'" style="flex:'+(+x[1]||0)+'"></i>'}).join('')+'</div><div class="nleg">'+
+        A.parts.map(function(x,i){return '<span><i class="n'+(i%4)+'"></i>'+esc(x[0])+' <b>'+esc(x[1])+' %</b></span>'}).join('')+'</div>'+
+        (A.note?'<p class="s13 muted" style="margin:10px 0 0;line-height:1.4">'+esc(A.note)+'</p>':'')+'</div>'+
+        (A.detail?'<div class="list">'+A.detail.map(function(x){return pgRow(x.t,x.d)}).join('')+'</div>':'')}
+    if(n.journee&&n.journee.length)h+='<div class="sec"'+(n.assiette?'':' style="margin-top:4px"')+'>Journée type</div><div class="list">'+n.journee.map(function(x){
+      return '<div class="li nc nj"><span class="nh">'+esc(x.h)+'</span><span class="grow">'+(x.items||[]).map(function(t){return '<div class="m">'+esc(t)+'</div>'}).join('')+'</span></div>'}).join('')+'</div>'}
+  if(NUTV==='menus'){var bm=nutBest(n);
+    if(n.menus&&n.menus.length){
+      h+=(bm.i>=0?'<p class="foot" style="margin:0 16px 12px">Le plus proche de ta cible de '+bm.c+' kcal : '+esc(n.menus[bm.i].nom)+'. Ajuste avec les glucides.</p>':'<p class="foot" style="margin:0 16px 12px">Renseigne ton profil dans Chiffres pour savoir quel menu correspond à ta cible.</p>')+
+        n.menus.map(function(m,i){return nutDet(esc(m.nom)+(i===bm.i?' <span class="tag" style="margin-left:6px">ta cible</span>':''),'<div class="list">'+(m.repas||[]).map(nutRepas).join('')+'</div>',i===bm.i,
+          nutMac(m.mac),m.kcal?'<span class="nkc">'+esc(m.kcal)+' kcal</span>':'')}).join('')}
+    if(n.exterieur&&n.exterieur.length)h+='<div class="sec">Repas à l\'extérieur</div><div class="list">'+n.exterieur.map(nutRepas).join('')+'</div>'}
+  if(NUTV==='rep')h+=n.sections.map(function(x,i){var xs=x.items||[];return nutDet(esc(x.t),'<div class="list">'+xs.map(nutTxt).join('')+'</div>',0,xs.length+' repère'+(xs.length>1?'s':''))}).join('');
+  if(NUTV==='faq')h+=n.faq.map(function(x){return nutDet(esc(x.q),'<div class="list">'+nutTxt(x.r)+'</div>',0,'')}).join('');
   return h}
 
 /* ================= PAINT ================= */
@@ -4530,6 +4585,7 @@ document.addEventListener('click',function(ev){
   case 'prg-sel': S.prog.sel=+b.dataset.v;save();hap('tap');paint(); break;
   case 'zpro': S.prefs.zpro=+b.dataset.v;S.prefs.zet=0;save();hap('tap');paint(); break;
   case 'zet': S.prefs.zet=+b.dataset.v;save();hap('tap');paint(); break;
+  case 'nutv': NUTV=b.dataset.v;hap('tap');paint();try{window.scrollTo(0,0)}catch(e){} break;
   case 'prg-del': ask({t:'Retirer le programme ?',m:'Les séances déjà faites restent dans l\'historique.',ok:'Retirer',danger:1}).then(function(ok){if(!ok)return;S.prog=S.lib&&S.lib.length?S.lib.shift():null;PGV='plan';save();go(S.prog?'prog':'renfo')}); break;
   case 'onb-export': doExport();toast('Sauvegarde exportée'); break;
   case 'onb-import': doImport(function(){onbClose()}); break;
