@@ -770,6 +770,23 @@ details.fgr .list{margin:0 0 6px}
 .hold .hv{font-family:var(--disp);font-size:120px;line-height:1;color:var(--tx)}
 .hold .b.big{min-width:220px}
 .errb{position:fixed;left:12px;right:12px;bottom:calc(92px + env(safe-area-inset-bottom));z-index:9000;display:flex;align-items:center;gap:8px;padding:12px;border-radius:14px;background:var(--el2);color:var(--tx);font-size:13px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.pgt{display:flex;gap:6px;overflow-x:auto;margin:0 -16px 16px;padding:2px 16px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.pgt::-webkit-scrollbar{display:none}
+.seg.pgs{margin-bottom:10px}.seg.pgs button{min-height:34px;font-size:13px;padding:5px 4px}
+.pgt{gap:4px}.pgt button{flex:1 0 auto;border:0;border-radius:999px;padding:8px 8px;min-height:38px;background:var(--el2);color:var(--tx);font:inherit;font-size:13.5px;font-weight:600;transition:background .2s var(--ez),color .2s}
+.pgt button[aria-selected="true"],.pgt.pgl button[aria-pressed="true"]{background:var(--acf);color:var(--acft)}
+details.fgr .fgd{display:flex;gap:4px;margin-top:7px}
+.fgv{align-items:flex-start}.fgv.cur{background:var(--acs)}
+.fgn{flex:none;width:26px;height:26px;margin-top:1px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--el3);font-size:13px;font-weight:700;color:var(--tx2)}
+.fgv.cur .fgn{background:var(--acf);color:var(--acft)}
+.fgv .b,.fgv .tag{margin-top:2px}
+.fgp{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:2px 16px 8px;font-size:13px;color:var(--tx2)}.fgp b{color:var(--tx);font-weight:650}
+ol.fgol{margin:0 0 14px;padding:14px 16px 14px 36px;font-size:14px;line-height:1.45}ol.fgol li{margin:3px 0}
+.nbar{display:flex;height:14px;border-radius:7px;overflow:hidden;gap:2px}
+.nbar i,.nleg i{display:block;background:var(--ac)}.nbar .n1,.nleg .n1{background:var(--acf)}.nbar .n2,.nleg .n2{background:var(--tx3)}.nbar .n3,.nleg .n3{background:#C9A24A}
+.nleg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px;font-size:13px;color:var(--tx2)}.nleg span{display:inline-flex;align-items:center;gap:6px}.nleg b{color:var(--tx);font-weight:650}
+.nleg i{width:10px;height:10px;border-radius:3px}
+.nj{align-items:flex-start}.nj .m{margin:0 0 3px}.nh{flex:none;width:86px;font-size:13px;font-weight:650;color:var(--ac);padding-top:1px}
 </style>
 </head>
 <body>
@@ -819,7 +836,7 @@ function seedExos(){return SEED.map(function(e){return {id:uid(),nom:e[0],groupe
 var MODAL=['Course extérieur','Course tapis','Echo bike','Rameur','Ski erg','Vélo','Mini elliptique','Salle / plateau','Marche','Escalier','Conditioning KB','Autre'];
 
 function fresh(){return{schema:SCHEMA,exos:seedExos(),seances:[],blocs:[],modeles:[],cur:null,timer:null,
-  prefs:{theme:'auto',rest:120,fcmax:0,w4:0,rpm4:0,vma:0,poids:0,z2goal:180,lock:1,row500:0,ski500:0,age:0,taille:0,mg:0,zpro:1,zet:0,th:thDef()},wod:null,goals:{},prog:null,fig:{}}}
+  prefs:{theme:'auto',rest:120,fcmax:0,w4:0,rpm4:0,vma:0,poids:0,z2goal:180,lock:1,row500:0,ski500:0,age:0,taille:0,mg:0,zpro:1,zet:0,th:thDef()},wod:null,goals:{},prog:null,fig:{},lib:[]}}
 function thDef(){return {cmin:20,cver:'rx',cgoal:0,ltop:10,lver:'rx',hset:3,hpu:12,hlr:10,hpp:25,hrest:4,hsq:100,hver:'rx',wset:4,wsw:25,wpp:15,wrest:60,wkg:16,wver:'rx'}}
 function migrate(s){
   if(!s.prefs)s.prefs={};
@@ -873,6 +890,7 @@ function migrate(s){
   if(s.prog===undefined||(s.prog&&!(s.prog.data&&prgValid(s.prog.data))))s.prog=null;
   /* schéma 16 : palier courant par figure du programme importé (fig[id]={i,d,h}) */
   if(!s.fig||typeof s.fig!=='object'||Array.isArray(s.fig))s.fig={};
+  if(!Array.isArray(s.lib))s.lib=[];
   s.schema=SCHEMA; return s;
 }
 function load(){try{var r=JSON.parse(localStorage.getItem(KEY));if(r&&r.schema)return migrate(r)}catch(e){}return fresh()}
@@ -1704,7 +1722,8 @@ var KONB='carnet-onb', KVER='carnet-ver';
 var NEWS=[{v:'1.17.0',l:[
   ['pullup','Programmes au poids du corps','Un fichier programme peut décrire des figures par niveaux : objectif de chaque niveau, validation en un geste, critères de passage de phase.'],
   ['stopwatch','Circuits et chrono de maintien','Les circuits tournent seuls d\'un exercice à l\'autre avec les bons repos. Les maintiens ont un chrono avec 5 s de mise en place.'],
-  ['trophy','Reprise depuis ATELIER','Les paliers et essais d\'une sauvegarde ATELIER ou POLARIS se reprennent dans Carnet.']]},
+  ['trophy','Reprise depuis ATELIER','Les paliers et essais d\'une sauvegarde ATELIER ou POLARIS se reprennent dans Carnet.'],
+  ['dumbbell','Plusieurs programmes','Importer un programme ne remplace plus le précédent : passe de l\'un à l\'autre en un geste. Chaque programme se lit en onglets : plan, progression, circuits, méthode, nutrition.']]},
  {v:'1.16.1',l:[
   ['dumbbell','Nouvelle icône','Un haltère dont la barre est un tracé cardio : renfo et cardio réunis. Sur iPhone, l\'écran d\'accueil garde l\'ancienne icône tant que l\'app n\'est pas réinstallée.']]},
  {v:'1.16.0',l:[
@@ -2436,7 +2455,7 @@ function exoSub(e,sets,pg,item,dt){
 function vRenfoRun(){
   var c=S.cur,b=c.blocId?S.blocs.filter(function(x){return x.id===c.blocId})[0]:null;
   var doneEx=c.order.filter(function(id){return c.sets.some(function(s){return s.exoId===id})}).length;
-  PG={t:b?b.nom:(c.prog?'Séance '+c.prog.code:(c.nom||'Séance libre')),sub:b?'Semaine '+c.semaine:(c.prog&&S.prog&&S.prog.data?'En cours, '+(S.prog.data.nom||'Programme'):'En cours')};
+  PG={t:b?b.nom:(c.prog?(String(c.prog.code).charAt(0)==='@'?String(c.nom||'Circuit').split(' · ').pop():'Séance '+c.prog.code):(c.nom||'Séance libre')),sub:b?'Semaine '+c.semaine:(c.prog&&S.prog&&S.prog.data?'En cours, '+(S.prog.data.nom||'Programme'):'En cours')};
   var h='<div class="live"><div class="row"><span class="clk grow" id="sdur">'+hms((Date.now()-c.startedAt)/1000)+'</span>'+
     '<span class="tag ac">'+(b?'Bloc · S'+c.semaine:'En cours')+'</span></div>'+
     '<div class="st3"><div>Séries<b>'+nWork(c.sets)+'</b></div><div>Volume<b>'+fmtKg(volume(c))+'</b></div><div>Exercices<b>'+doneEx+' / '+c.order.length+'</b></div></div>'+
@@ -2830,7 +2849,7 @@ function vReg(){
     '<p class="foot">Pendant une séance cardio, lecture et pause pilotent le chrono depuis l\'écran verrouillé.</p>';
   h+='<div class="sec">Données</div><div class="list">'+
     li({act:'tab',extra:' data-t="exos"',t:'Exercices',r:S.exos.length,chev:1})+
-    li({act:'export',cls:'acc',t:'Exporter la sauvegarde'})+li({act:'import',cls:'acc',t:'Importer une sauvegarde'})+li({act:'prg-imp',cls:'acc',t:S.prog?'Remplacer le programme':'Importer un programme'})+
+    li({act:'export',cls:'acc',t:'Exporter la sauvegarde'})+li({act:'import',cls:'acc',t:'Importer une sauvegarde'})+li({act:'prg-imp',cls:'acc',t:'Importer un programme',m:S.lib&&S.lib.length?(S.lib.length+1)+' programmes sur ce téléphone':''})+
     li({act:'onb-show',t:'Procédure d\'installation',chev:1})+li({act:'news-show',t:'Nouveautés de la version',chev:1})+'</div>'+
     '<p class="foot">Les données restent sur ce téléphone. Exporte avant chaque mise à jour.</p>';
   h+='<div class="list">'+li({act:'reset',cls:'red ctr',t:'Effacer toutes les données'})+'</div>';
@@ -3328,15 +3347,15 @@ function restTxt(s){s=+s||0;return s<60?s+' s':Math.floor(s/60)+'′'+(s%60?pad(
 function prgExo(x){var e=exoByName(x.nom);
   if(!e){e={id:uid(),nom:x.nom,groupe:x.groupe||'Programme',unite:x.unite==='bw'||x.unite==='sec'?x.unite:'kg',rest:0,inc:2.5,ic:x.ic&&ICP[x.ic]&&!ICP[x.ic].x?String(x.ic):'',rmin:0,rmax:0,cmax:0,uni:0,note:'',cmaxNo:0};S.exos.push(e)}
   return e}
-function prgStart(code){var p=prgCur();if(!p)return;var s=prgSes(p,code);if(!s)return;
+function prgStart(code){var p=prgCur();if(!p)return;var s=String(code).charAt(0)==='@'?circSes(String(code).slice(1)):prgSes(p,code);if(!s)return;
   if(S.cur){toast('Termine d\'abord la séance en cours');go('renfo');return}
   var order=[],rest={},itm={};
   prgEx(p,s).forEach(function(x){var e=prgExo(x);if(order.indexOf(e.id)<0)order.push(e.id);rest[e.id]=+x.repos||0;
     itm[e.id]={mode:x.mode||'classique',reps:(x.reps||[]).slice(0,6),baisse:+x.baisse||0,note:x.note||'',fin:x.fin||'',avec:x.avec||''};
     if(x.fig!==undefined){itm[e.id].fig=x.fig;itm[e.id].li=x.li;itm[e.id].md=x.md||'';if(x.repli)itm[e.id].repli=x.repli}
     if(x.circ)itm[e.id].circ=x.circ});
-  _vfade=1;newRenfo(order);S.cur.nom=(S.prog.data.nom||'Programme')+' '+s.code+' · '+s.nom;
-  S.cur.prog={pid:p.id,code:s.code,rest:rest,it:itm};
+  _vfade=1;newRenfo(order);S.cur.nom=(S.prog.data.nom||'Programme')+(s.circ?' · circuit · ':' '+s.code+' · ')+s.nom;
+  S.cur.prog={pid:s.circ?p.id+'#c':p.id,code:s.code,rest:rest,it:itm};
   if(S.prog.data.methode==='figures'){S.cur.prog.ech=(s.echauf||[]).slice(0,4);S.cur.prog.etir=(s.etir||[]).slice(0,4);if(order.length)S.cur.act=order[0]}
   save();paint()}
 function prgTarget(zi,e,ws){if(zi.fig!==undefined){var lw=ws[ws.length-1],F0=fgFig(zi.fig),L0=F0&&F0.niveaux[zi.li];
@@ -3481,8 +3500,6 @@ function fgView(d,p){var ph=fgPh(p.phase),h='';
   if(ph&&ph.criteres&&ph.criteres.length){var ok=0,rows=ph.criteres.map(function(c){var r=fgCrit(c);if(r.ok)ok++;
       return li({t:esc(r.t),m:r.m,r:r.ok?'<span class="tag ac">validé</span>':'<span class="s12 dim">'+esc(r.best)+'</span>'})}).join('');
     h+='<div class="sec">'+(fgPh(ph.n+1)?'Prêt pour la phase '+(ph.n+1):'Objectif final')+' · '+ok+' sur '+ph.criteres.length+'</div><div class="list">'+rows+'</div>'+(ph.critNote?'<p class="foot">'+esc(ph.critNote)+'</p>':'')}
-  if(ph&&ph.regles&&ph.regles.length)h+='<div class="sec">Méthode</div><div class="list">'+ph.regles.map(function(r){return '<div class="li nc"><span class="grow"><div class="t s13">'+esc(r)+'</div></span></div>'}).join('')+'</div>';
-  var R=d.routines||{},ks=Object.keys(R);if(ks.length)h+='<div class="sec">Échauffements et étirements</div>'+ks.map(function(k){return fgRoutine(R[k],0)}).join('');
   if(d.gtg&&(d.gtg.figures||[]).some(function(id){var F=fgFig(id);return F&&F.phase===p.phase}))h+=fgGtg(d);
   return h}
 /* Grease the groove : séries courtes au fil de la journée, regroupées dans une séance du jour */
@@ -3537,7 +3554,7 @@ function prgImport(){
   var inp=document.createElement('input');inp.type='file';inp.accept='.json,application/json';
   inp.onchange=function(){var f=inp.files[0];if(!f)return;var rd=new FileReader();
     rd.onload=function(){try{var d=JSON.parse(rd.result);if(!prgValid(d))throw 0;
-        S.prog={data:d,sel:0,imp:today()};save();hap('ok');toast('Programme importé : '+(d.nom||'sans nom'));_vfade=1;go('prog')}
+        prgAdd(d);save();hap('ok');toast('Programme importé : '+(d.nom||'sans nom'));_vfade=1;go('prog')}
       catch(e){toast('Fichier programme invalide')}};
     rd.readAsText(f)};
   inp.click()}
@@ -3555,7 +3572,7 @@ function prgNut(n){var p=S.prefs,pr=n.protocoles||[];if(!pr.length)return '';
     prow('poids','Poids','kg',p.poids,'',1)+prow('mg','Masse grasse estimée','%',p.mg,'photos et miroir, sans se sous-estimer',1)+'</div>';
   h+='<div class="card"><span class="lbl">Protocole</span><div class="seg" style="margin-bottom:8px">'+pr.map(function(q,i){
     return '<button data-act="zpro" data-v="'+(i+1)+'" aria-pressed="'+(i===k)+'" aria-label="'+esc(q.nom)+'">'+esc(q.n||i+1)+'</button>'}).join('')+'</div>'+
-    '<div class="zpn">'+esc(P.nom||'')+'</div>';
+    '<div class="zpn">'+esc(P.nom||'')+'</div>'+(P.desc?'<p class="s13 muted" style="margin:6px 0 0;line-height:1.4">'+esc(P.desc)+'</p>':'');
   if(r.ok&&r.n>1)h+='<div class="seg" style="margin:12px 0 0">'+P.ecarts.map(function(x,i){
     return '<button data-act="zet" data-v="'+i+'" aria-pressed="'+(i===r.et)+'">'+(i?'Étape '+i:'Départ')+'</button>'}).join('')+'</div>';
   h+='</div>';
@@ -3570,10 +3587,16 @@ function vProg(){var d=S.prog&&S.prog.data,p=prgCur();
   PG={t:d&&d.nom?d.nom:'Programme',sub:p?p.nom:'',back:{act:'tab',t:'renfo',label:'Renfo'}};
   if(!p)return '<div class="card"><div class="empty">'+ico('dumbbell')+'<b>Aucun programme</b>Importe un fichier programme (JSON) : séances, schémas de séries, repos. Il reste sur ce téléphone et n\'est jamais publié avec l\'app.</div>'+
     '<button class="b pri big full" data-act="prg-imp">Importer un programme</button></div>';
-  var all=prgAll(),nx=prgNext(p),h='',cv=zImg('cover'),lg=zImg('logo');
-  if(cv){PG.nolt=1;h+='<div class="zcov"><img class="zbg" src="'+cv+'" alt="">'+
+  var all=prgAll(),nx=prgNext(p),h='',cv=zImg('cover'),lg=zImg('logo'),tabs=pgTabs(d);
+  if(!tabs.some(function(x){return x[0]===PGV}))PGV='plan';
+  if(cv&&PGV==='plan'){PG.nolt=1;h+='<div class="zcov"><img class="zbg" src="'+cv+'" alt="">'+
     (lg?'<h1 class="zlg"><img src="'+lg+'" alt="'+esc(d.nom||'Programme')+'"></h1>':'<h1 class="zct">'+esc(d.nom||'Programme')+'</h1>')+
     '<span class="zpill">'+esc(p.nom||'')+'</span></div>'}
+  h+=pgLib()+pgTabBar(tabs);
+  if(PGV==='prog')return h+fgAll(d,p);
+  if(PGV==='circ')return h+circAll(d);
+  if(PGV==='meth')return h+methView(d);
+  if(PGV==='nut')return h+nutView(d.nutrition);
   if(d.methode==='figures'&&all.length>4)h+=fgSel(all,p);
   else if(all.length>1)h+='<div class="seg">'+all.map(function(q,i){return '<button data-act="prg-sel" data-v="'+i+'" aria-pressed="'+(q===p)+'">'+esc(q.nom||'Programme '+(i+1))+'</button>'}).join('')+'</div>';
   h+=prgHero(p,nx,0);
@@ -3589,10 +3612,110 @@ function vProg(){var d=S.prog&&S.prog.data,p=prgCur();
       prgEx(p,s).map(function(x){var zi={mode:x.mode||'classique',baisse:+x.baisse||0,reps:x.reps||[],note:x.note||'',fin:x.fin||'',avec:x.avec||''};
         return '<div class="zx"><span class="zn">'+esc(x.nom)+'</span>'+zRow(zi,+x.repos||0,-1,N)+zNote(zi)+'</div>'}).join('')+'</div></div>'});
   if(p.regles&&p.regles.length)h+='<div class="sec">Règles</div><div class="list">'+p.regles.map(function(r){return '<div class="li nc"><span class="grow"><div class="t s13">'+esc(r)+'</div></span></div>'}).join('')+'</div>';
-  if(d.nutrition)h+=prgNut(d.nutrition);
   if(d.methode==='figures')h+='<div class="list" style="margin-top:20px">'+li({act:'fig-imp',ic:it('trophy','c-hyb'),t:'Reprendre mes paliers ATELIER ou POLARIS',m:'Depuis une sauvegarde JSON de ces apps : paliers et historique des essais',chev:1})+'</div>';
-  h+='<div class="list" style="margin-top:20px">'+li({act:'prg-imp',cls:'acc',t:'Remplacer le programme'})+li({act:'prg-del',cls:'red',t:'Retirer le programme'})+'</div>'+
+  h+='<div class="list" style="margin-top:20px">'+li({act:'prg-imp',cls:'acc',t:'Importer un autre programme',m:'Le programme actuel reste disponible'})+li({act:'prg-del',cls:'red',t:'Retirer ce programme'})+'</div>'+
     '<p class="foot">Importé le '+dLong(S.prog.imp)+'. Le fichier reste privé, sur ce téléphone.</p>';
+  return h}
+/* bibliothèque : plusieurs fichiers programme gardés, un seul actif (S.prog), les autres dans S.lib */
+var PGV='plan';
+function prgName(x){return x&&x.data&&x.data.nom||'Programme'}
+function prgAdd(d){var nm=d.nom||'Programme',same=S.prog&&prgName(S.prog)===nm;
+  S.lib=(S.lib||[]).filter(function(x){return prgName(x)!==nm&&(!S.prog||prgName(x)!==prgName(S.prog))});
+  if(S.prog&&!same)S.lib.unshift(S.prog);
+  S.prog={data:d,sel:same?Math.min(+S.prog.sel||0,d.programmes.length-1):0,imp:today()};PGV='plan'}
+function prgSw(i){var x=(S.lib||[])[i];if(!x)return;if(S.cur&&S.cur.prog){toast('Termine d\'abord la séance en cours');return}
+  S.lib.splice(i,1);if(S.prog)S.lib.unshift(S.prog);S.prog=x;PGV='plan';save();hap('tap');_vfade=1;paint()}
+function pgLib(){var L=S.lib||[];if(!L.length)return '';var a=[[prgName(S.prog),-1]].concat(L.map(function(x,i){return [prgName(x),i]}));
+  return '<div class="'+(a.length>3?'pgt pgl':'seg pgs')+'" aria-label="Programmes">'+a.map(function(x){return '<button'+(x[1]<0?'':' data-act="prg-sw" data-v="'+x[1]+'"')+' aria-pressed="'+(x[1]<0)+'">'+esc(x[0])+'</button>'}).join('')+'</div>'}
+function pgTabs(d){var t=[['plan','Plan']];if(d.methode==='figures'&&d.phases)t.push(['prog','Niveaux']);
+  if(d.circuits&&Object.keys(d.circuits).length)t.push(['circ','Circuits']);
+  if(d.principes||(d.phases||[]).some(function(x){return x.regles&&x.regles.length})||d.routines||d.gtg)t.push(['meth','Méthode']);
+  if(d.nutrition)t.push(['nut','Nutrition']);return t}
+function pgTabBar(t){if(t.length<2)return '';
+  return '<div class="pgt" role="tablist">'+t.map(function(x){return '<button role="tab" data-act="pgv" data-v="'+x[0]+'" aria-selected="'+(PGV===x[0])+'">'+x[1]+'</button>'}).join('')+'</div>'}
+function pgRow(t,m){return '<div class="li nc"><span class="grow">'+(t?'<div class="t sb">'+esc(t)+'</div>':'')+(m?'<div class="'+(t?'m':'t s13')+'">'+esc(m)+'</div>':'')+'</span></div>'}
+/* Progression : toutes les phases, toutes les figures, tous les niveaux */
+function fgTT(t){if(!t)return '';return t.mode==='circuit'?'Travail technique en circuit : '+(t.tours||1)+' tours, '+restTxt(t.pexos)+' entre exercices, '+restTxt(t.ptours)+' entre tours.':
+  'Travail technique par essais'+(t.duree?', '+t.duree+' par figure':'')+', '+restTxt(t.repos||90)+' entre essais.'}
+function fgCard(F){var i=fgLvl(F.id),n=F.niveaux.length,dots='';
+  for(var k=0;k<n;k++)dots+='<i class="'+(k<i?'ok':(k===i?'on':''))+(F.niveaux[k].opt?' op':'')+'"></i>';
+  var rows=F.niveaux.map(function(L,k){var tg=(L.opt?' <span class="tag">facultatif</span>':'')+(L.bonus?' <span class="tag">bonus</span>':'');
+    return '<div class="li nc fgv'+(k===i?' cur':'')+'"><span class="fgn num">'+(k+1)+'</span><span class="grow"><div class="t s14">'+esc(L.nom)+tg+'</div>'+
+      (L.obj?'<div class="m">Objectif '+fgObj(L.obj)+'</div>':'')+(L.note?'<div class="m">'+esc(L.note)+'</div>':'')+'</span>'+
+      (k===i?'<span class="tag ac">actuel</span>':'<button class="b xs" data-act="fig-lv" data-f="'+esc(F.id)+'" data-v="'+k+'" aria-label="'+esc(F.nom)+', reprendre au niveau '+(k+1)+'">Choisir</button>')+'</div>'}).join('');
+  var nt=[F.prereq&&F.prereq.length?'Prérequis : '+F.prereq.join(', ')+'.':'',F.note||''].filter(Boolean).join(' ');
+  return '<details class="card fgr"><summary><span class="grow" style="min-width:0"><b>'+esc(F.nom)+'</b>'+(F.bonus?' <span class="tag">bonus</span>':'')+
+    '<span class="fgd">'+dots+'</span></span><span class="s12 dim">'+(i+1)+' sur '+n+'</span></summary>'+
+    (nt?'<p class="s13 muted" style="margin:0 16px 10px;line-height:1.4">'+esc(nt)+'</p>':'')+'<div class="list">'+rows+'</div></details>'}
+function fgAll(d,p){var h='';
+  (d.phases||[]).forEach(function(ph){
+    h+='<div class="sec">Phase '+ph.n+' · '+esc(ph.nom||'')+(ph.n===p.phase?' <span class="tag ac">en cours</span>':'')+'</div>';
+    if(ph.tt)h+='<p class="foot" style="margin-top:-4px">'+esc(fgTT(ph.tt))+'</p>';
+    var ids=ph.figures||d.figures.filter(function(f){return f.phase===ph.n}).map(function(f){return f.id});
+    ids.map(fgFig).filter(Boolean).forEach(function(F){h+=fgCard(F)});
+    if(ph.criteres&&ph.criteres.length){var ok=0,rows=ph.criteres.map(function(c){var r=fgCrit(c);if(r.ok)ok++;
+        return li({t:esc(r.t),m:r.m,r:r.ok?'<span class="tag ac">validé</span>':'<span class="s12 dim">'+esc(r.best)+'</span>'})}).join('');
+      h+='<div class="list">'+rows+'</div><p class="foot">'+(fgPh(ph.n+1)?'Pour passer à la phase '+(ph.n+1):'Objectif final')+' : '+ok+' sur '+ph.criteres.length+'.'+(ph.critNote?' '+esc(ph.critNote):'')+'</p>'}});
+  return h+'<p class="foot">« Choisir » place le niveau de départ, par exemple après un test. Le niveau monte ensuite depuis la séance.</p>'}
+/* Circuits : tous, lisibles et lançables seuls */
+function circUse(d,cid){var n=[];(d.programmes||[]).forEach(function(q){q.seances.forEach(function(s){if((s.circuits||[]).indexOf(cid)>=0&&n.indexOf(q.phase)<0)n.push(q.phase)})});return n.sort()}
+function circSes(cid){var d=fgD(),C=d&&d.circuits&&d.circuits[cid];if(!C)return null;return {code:'@'+cid,nom:C.nom||cid,tt:[],circuits:[cid],echauf:[],etir:[],circ:1,exos:[]}}
+function circAll(d){var C=d.circuits||{},h='<p class="foot" style="margin-top:0">Tous les circuits du programme. Chacun se lance seul, sans décaler la prochaine séance.</p>';
+  Object.keys(C).forEach(function(cid){var c=C[cid],ph=circUse(d,cid),np=(c.parties||[]).length;
+    h+='<details class="card fgr"><summary><span class="grow" style="min-width:0"><b>'+esc(c.nom||cid)+'</b><span class="s12 dim" style="display:block;margin-top:3px">'+
+      (ph.length?'Phase '+ph.join(' et '):'Hors séances')+(np>1?' · '+np+' parties':'')+'</span></span></summary>'+
+      (c.parties||[]).map(function(P){var t=[(+P.tours||1)+' tour'+((+P.tours||1)>1?'s':''),P.pexos?restTxt(P.pexos)+' entre exercices':'',P.ptours?restTxt(P.ptours)+' entre tours':''].filter(Boolean).join(', ');
+        return '<div class="fgp"><b>'+esc(P.nom||'Circuit')+'</b><span>'+esc(t)+'</span></div><div class="list">'+(P.exos||[]).map(function(X){var F=X.fig?fgFig(X.fig):null,nm=X.nom||'';
+            if(F&&(X.mode==='courant'||X.mode==='inferieur')){var i=fgLvl(X.fig);if(X.mode==='inferieur')i=Math.max(0,i-1);nm=F.niveaux[i].nom+(X.mode==='inferieur'?' (un niveau sous le tien)':' (ton niveau)')}
+            else if(X.mode==='dropset')nm=nm+' en dropset';
+            return li({t:esc(nm),m:esc([X.var?'Variante : '+X.var:'',X.si?'Programme '+X.si+' seulement':'',X.note||''].filter(Boolean).join(' · ')),r:'<span class="s13 sb">'+esc(fgLbl(X.v,X.u,X.cote))+'</span>'})}).join('')+'</div>'}).join('')+
+      (c.note?'<p class="s13 muted" style="margin:0 16px 10px">'+esc(c.note)+'</p>':'')+
+      '<div style="padding:2px 16px 16px"><button class="b tint full" data-act="prg-start" data-v="@'+esc(cid)+'">Faire ce circuit</button></div></details>'});
+  return h}
+/* Méthode : principes, séance type, boucle, règles des phases, GTG, routines */
+function methView(d){var P=d.principes,h='';
+  if(P&&P.seance)h+='<div class="sec">'+esc(P.seance.titre||'La séance type')+'</div><div class="list">'+(P.seance.items||[]).map(function(x){return li({t:esc(x.t),r:'<span class="s12 dim">'+esc(x.d||'')+'</span>'})}).join('')+'</div>'+
+    (P.seance.note?'<p class="foot">'+esc(P.seance.note)+'</p>':'');
+  if(P&&P.items)h+='<div class="sec">'+esc(P.titre||'Principes')+'</div>'+(P.intro?'<p class="foot" style="margin-top:-4px">'+esc(P.intro)+'</p>':'')+
+    '<div class="list">'+P.items.map(function(x,i){return '<div class="li nc fgv"><span class="fgn num">'+(i+1)+'</span><span class="grow"><div class="t sb">'+esc(x.t)+'</div><div class="m">'+esc(x.d||'')+'</div></span></div>'}).join('')+'</div>';
+  if(P&&P.boucle)h+='<div class="sec">'+esc(P.boucle.titre||'Boucle')+'</div><ol class="card fgol">'+(P.boucle.etapes||[]).map(function(e){return '<li>'+esc(e)+'</li>'}).join('')+'</ol>'+
+    (P.boucle.note?'<p class="foot">'+esc(P.boucle.note)+'</p>':'');
+  (d.phases||[]).forEach(function(ph){if(ph.regles&&ph.regles.length)h+='<div class="sec">Phase '+ph.n+' · '+esc(ph.nom||'')+'</div>'+(ph.tt?'<p class="foot" style="margin-top:-4px">'+esc(fgTT(ph.tt))+'</p>':'')+
+    '<div class="list">'+ph.regles.map(function(r){return pgRow('',r)}).join('')+'</div>'});
+  if(d.gtg)h+='<div class="sec">'+esc(d.gtg.nom||'Grease the groove')+'</div><div class="list">'+(d.gtg.regles||[]).map(function(r){return pgRow('',r)}).join('')+
+    ((d.gtg.rythmes||[]).length?pgRow('Rythmes possibles',d.gtg.rythmes.join(' ; ')+'.'):'')+'</div>';
+  var R=d.routines||{},ks=Object.keys(R);if(ks.length)h+='<div class="sec">Échauffements et étirements</div>'+ks.map(function(k){return fgRoutine(R[k],0)}).join('');
+  if(d.source)h+='<p class="foot">'+esc(d.source)+'</p>';
+  return h||'<p class="foot">Aucun contenu de méthode dans ce fichier.</p>'}
+/* Nutrition : calculateur (paramètres du fichier), protéines par kilo, assiette, journée type, menus, repas dehors, sections, FAQ */
+function nutMac(m){return m&&m.length===3?'G '+m[0]+' · P '+m[1]+' · L '+m[2]:''}
+function nutRepas(r){return li({t:esc(r.nom),m:esc((r.items||[]).join(', '))+(r.mac?'<br><span class="dim">'+nutMac(r.mac)+'</span>':''),r:r.kcal?'<span class="s13 sb">'+r.kcal+' kcal</span>':''})}
+function nutDet(t,body,open,sub){return '<details class="card fgr"'+(open?' open':'')+'><summary><span class="grow" style="min-width:0"><b>'+esc(t)+'</b>'+(sub?'<span class="s12 dim" style="display:block;margin-top:3px">'+sub+'</span>':'')+'</span></summary>'+body+'</details>'}
+function nutView(n){var p=S.prefs,h='';if(!n)return '';
+  if(n.titre)h+='<div class="sec" style="margin-top:4px">'+esc(n.titre)+'</div>';
+  if(n.intro)h+='<p class="foot" style="margin-top:-4px">'+esc(n.intro)+'</p>';
+  if(n.protocoles&&n.protocoles.length)h+=prgNut(n);
+  if(n.proteinesKg&&n.proteinesKg.length===2){var w=+p.poids||0,a=n.proteinesKg;
+    h+='<div class="sec">Protéines par jour</div><div class="list">'+prow('poids','Poids','kg',p.poids,'',1)+'</div>'+
+      (w>0?'<div class="grid">'+[['Bas',a[0]],['Haut',a[1]]].map(function(x){return '<div class="tile"><div class="k">'+x[0]+'</div><div class="v">'+Math.round(w*x[1])+'<span class="u">g</span></div><div class="s">'+String(x[1]).replace('.',',')+' g par kilo</div></div>'}).join('')+'</div>':
+        '<p class="foot">Renseigne ton poids pour calculer.</p>')}
+  if(n.assiette&&n.assiette.parts){var A=n.assiette;
+    h+='<div class="sec">'+esc(A.nom||'Assiette')+'</div><div class="card"><div class="nbar" role="img" aria-label="'+esc(A.parts.map(function(x){return x[0]+' '+x[1]+' %'}).join(', '))+'">'+
+      A.parts.map(function(x,i){return '<i class="n'+(i%4)+'" style="flex:'+(+x[1]||0)+'"></i>'}).join('')+'</div><div class="nleg">'+
+      A.parts.map(function(x,i){return '<span><i class="n'+(i%4)+'"></i>'+esc(x[0])+' <b>'+x[1]+' %</b></span>'}).join('')+'</div>'+
+      (A.note?'<p class="s13 muted" style="margin:10px 0 0;line-height:1.4">'+esc(A.note)+'</p>':'')+'</div>'+
+      (A.detail?'<div class="list">'+A.detail.map(function(x){return pgRow(x.t,x.d)}).join('')+'</div>':'')}
+  if(n.journee&&n.journee.length)h+='<div class="sec">Journée type</div><div class="list">'+n.journee.map(function(x){
+    return '<div class="li nc nj"><span class="nh">'+esc(x.h)+'</span><span class="grow">'+(x.items||[]).map(function(t){return '<div class="m">'+esc(t)+'</div>'}).join('')+'</span></div>'}).join('')+'</div>';
+  if(n.menus&&n.menus.length){var best=-1,cb=0;
+    if(n.protocoles&&n.protocoles.length){var k=Math.max(0,Math.min(n.protocoles.length-1,(+p.zpro||1)-1)),r=nutCalc(n,n.protocoles[k],+p.zet||0);
+      if(r.ok){cb=Math.round(r.cible);var dm=1e9;n.menus.forEach(function(m,i){var dd=Math.abs((+m.kcal||0)-r.cible);if(dd<dm){dm=dd;best=i}})}}
+    h+='<div class="sec">Menus types</div>'+(best>=0?'<p class="foot" style="margin-top:-4px">Le plus proche de ta cible de '+cb+' kcal : '+esc(n.menus[best].nom)+'. Ajuste avec les glucides.</p>':'')+
+      n.menus.map(function(m,i){return nutDet(m.nom+(i===best?' · ta cible':''),'<div class="list">'+(m.repas||[]).map(nutRepas).join('')+'</div>',0,
+        esc([m.kcal?'≈ '+m.kcal+' kcal':'',nutMac(m.mac)].filter(Boolean).join(' · ')))}).join('')}
+  if(n.exterieur&&n.exterieur.length)h+=nutDet('Repas à l\'extérieur','<div class="list">'+n.exterieur.map(nutRepas).join('')+'</div>',0,n.exterieur.length+' options');
+  if(n.sections&&n.sections.length)h+='<div class="sec">Repères</div>'+n.sections.map(function(x){return nutDet(x.t,'<div class="list">'+(x.items||[]).map(function(t){return pgRow('',t)}).join('')+'</div>',0,'')}).join('');
+  if(n.faq&&n.faq.length)h+='<div class="sec">Questions fréquentes</div><div class="list">'+n.faq.map(function(x){return pgRow(x.q,x.r)}).join('')+'</div>';
   return h}
 
 /* ================= PAINT ================= */
@@ -3848,6 +3971,9 @@ document.addEventListener('click',function(ev){
   case 'export': doExport();toast('Sauvegarde exportée'); break;
   case 'import': doImport(); break;
   case 'prg-imp': prgImport(); break;
+  case 'pgv': PGV=b.dataset.v;hap('tap');paint();try{window.scrollTo(0,0)}catch(e){} break;
+  case 'prg-sw': prgSw(+b.dataset.v); break;
+  case 'fig-lv': fgSet(b.dataset.f,+b.dataset.v,0); break;
   case 'prg-start': prgStart(b.dataset.v); break;
   case 'fig-up': {var fF=fgFig(b.dataset.f);if(fF)fgSet(b.dataset.f,fgStep(fF,fgLvl(b.dataset.f),1),1);break}
   case 'fig-set': fgSet(b.dataset.f,fgLvl(b.dataset.f)+(+b.dataset.v||0),0); break;
@@ -3862,7 +3988,7 @@ document.addEventListener('click',function(ev){
   case 'prg-sel': S.prog.sel=+b.dataset.v;save();hap('tap');paint(); break;
   case 'zpro': S.prefs.zpro=+b.dataset.v;S.prefs.zet=0;save();hap('tap');paint(); break;
   case 'zet': S.prefs.zet=+b.dataset.v;save();hap('tap');paint(); break;
-  case 'prg-del': ask({t:'Retirer le programme ?',m:'Les séances déjà faites restent dans l\'historique.',ok:'Retirer',danger:1}).then(function(ok){if(!ok)return;S.prog=null;save();go('renfo')}); break;
+  case 'prg-del': ask({t:'Retirer le programme ?',m:'Les séances déjà faites restent dans l\'historique.',ok:'Retirer',danger:1}).then(function(ok){if(!ok)return;S.prog=S.lib&&S.lib.length?S.lib.shift():null;PGV='plan';save();go(S.prog?'prog':'renfo')}); break;
   case 'onb-export': doExport();toast('Sauvegarde exportée'); break;
   case 'onb-import': doImport(function(){onbClose()}); break;
   case 'onb-os': ONBOS=b.dataset.v;hap('tap');reOnb(); break;
