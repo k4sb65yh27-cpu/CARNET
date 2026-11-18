@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-SpjkZGENXjw3B2FXhPSN7OyTyqLggY6OvA6bP6qBOgU='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; media-src 'self' data: blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-owUnQ4rMag+tpCZ/eBwCQO9T/K4SsbobmZvBuZ9qQow='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; media-src 'self' data: blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#000000">
 <meta name="color-scheme" content="dark light">
@@ -803,6 +803,19 @@ ol.fgol{margin:0 0 14px;padding:14px 16px 14px 36px;font-size:14px;line-height:1
 .nmac i{display:block;height:8px;border-radius:4px;background:var(--el3);overflow:hidden}
 .nmac i em{display:block;height:100%;border-radius:4px}
 .nmac .q0 em{background:var(--ac)}.nmac .q1 em{background:#D9A441}.nmac .q2 em{background:#A58FD0}
+.fi{--fc:#888;width:40px;height:40px;border-radius:12px;flex:none;display:inline-grid;place-items:center;background:color-mix(in srgb,var(--fc) 18%,transparent)}
+.fi svg{width:28px;height:28px;display:block}
+.fi.sm{width:30px;height:30px;border-radius:9px}.fi.sm svg{width:21px;height:21px}
+.fis{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.fis .fi{width:24px;height:24px;border-radius:7px}.fis .fi svg{width:17px;height:17px}
+.nj .fi{margin-right:10px}
+.crs .li .t{font-size:15px}
+.crq{font-family:var(--disp);font-weight:800;font-size:15px;white-space:nowrap}
+.crn{display:flex;align-items:center;gap:4px}
+.crn button{width:34px;height:34px;border-radius:50%;border:0;background:var(--el3);color:var(--tx);font-size:19px;line-height:1}
+.crn b{min-width:26px;text-align:center;font-family:var(--disp);font-weight:800;font-size:17px}
+.rn .li{align-items:flex-start}
+.rnew{display:inline-block;margin-left:8px;padding:2px 7px;border-radius:999px;background:var(--ac);color:var(--acft,#fff);font-size:11px;font-weight:700;vertical-align:2px}
 .nt{font-size:15px;color:var(--tx);line-height:1.4}
 .nkc{font-family:var(--disp);font-weight:800;font-size:15px;white-space:nowrap}
 .nh{flex:none;width:86px;font-size:13px;font-weight:650;color:var(--ac);padding-top:1px}
@@ -1829,10 +1842,12 @@ function sharePlan(nom,modalite,ph){
 function promptFallback(t){ openSheet('<h2>Séance</h2><div style="height:10px"></div><textarea rows="14" readonly>'+esc(t)+'</textarea>'+
   '<button class="b full gh" style="margin-top:12px" data-act="close">Fermer</button>') }
 /* ================= ONBOARDING ================= */
-var KONB='carnet-onb', KVER='carnet-ver';
+var KONB='carnet-onb', KVER='carnet-ver', KNVU='carnet-notes-vu', MAJDE='';
 /* Registre des nouveautés : une entrée par version, la plus récente en tête. [pictogramme, titre, texte] */
 var NEWS=[{v:'1.18.1',l:[
-  ['dumbbell','Nutrition plus lisible','L\'onglet Nutrition se découpe en rubriques : tes chiffres d\'abord (cible du jour et macros), puis la journée type ou l\'assiette, les menus avec celui qui colle à ta cible déjà ouvert, les repères et les questions.']]},
+  ['dumbbell','Nutrition plus lisible','L\'onglet Nutrition se découpe en rubriques : tes chiffres d\'abord (cible du jour et macros), puis la journée type ou l\'assiette, les menus avec celui qui colle à ta cible déjà ouvert, les repères et les questions. Chaque plat a son pictogramme.'],
+  ['trophy','Notes de version','Après une mise à jour, une carte en tête de l\'Accueil ouvre directement les notes. Elles restent consultables dans Réglages > Notes de version, version par version.'],
+  ['farmer','Liste de courses','Dans Menus, choisis combien de jours pour chaque menu type : l\'app additionne les ingrédients, les range par rayon, et tu partages ou copies la liste.']]},
   {v:'1.18.0',l:[
   ['deadlift','Haltérophilie','Saisis tes RM1, puis construis ta séance en blocs : un mouvement, un pourcentage, séries × reps. La charge s\'affiche aussitôt, arrondie à tes disques, avec le détail par côté.'],
   ['trophy','Programmes en %','Deux programmes intégrés, Initiation 8 semaines et Force 6 semaines, et les programmes de club importés : les charges suivent tes RM1.'],
@@ -1880,10 +1895,19 @@ function onbCheck(){
   ONBOS=detectOS();
   var seen=null,done=null;
   try{seen=localStorage.getItem(KVER);done=localStorage.getItem(KONB)}catch(e){}
-  if(seen&&seen!==VERSION){ONB='maj';return}
+  if(seen&&seen!==VERSION){MAJDE=seen;onbSeal();return}
+  if(!seen){try{localStorage.setItem(KNVU,VERSION)}catch(e){}}
   if(!standalone()&&!done){ONB='install';return}
   onbSeal();
 }
+function notesVu(){var v='';try{v=localStorage.getItem(KNVU)||''}catch(e){}return v===VERSION}
+function notesOpen(){try{localStorage.setItem(KNVU,VERSION)}catch(e){}
+  openSheet('<div class="shh">'+it('trophy','c-ac','lg')+'<div class="grow"><h2>Notes de version</h2><div class="s">Version installée : '+esc(VERSION)+'</div></div></div>'+
+    NEWS.map(function(n,i){return '<details class="card fgr"'+(i===0?' open':'')+'><summary><span class="grow"><b>Version '+esc(n.v)+'</b>'+(i===0?'<span class="tag" style="margin-left:6px">actuelle</span>':'')+
+      '<span class="s12 dim" style="display:block;margin-top:3px">'+n.l.length+' changement'+(n.l.length>1?'s':'')+'</span></span></summary><div class="list rn">'+
+      n.l.map(function(x){return li({ic:it(x[0],'c-ac','sm'),icsm:1,t:esc(x[1]),sb:1,m:esc(x[2])})}).join('')+'</div></details>'}).join('')+
+    '<p class="foot" style="margin:10px 4px">Tes séances et réglages sont conservés à chaque mise à jour. Exporte une sauvegarde de temps en temps depuis Réglages.</p>'+
+    '<button class="b full" data-act="close">Fermer</button>');paint()}
 function onbSeal(){try{localStorage.setItem(KVER,VERSION);localStorage.setItem(KONB,'1')}catch(e){}}
 function onbClose(){ONB=null;onbSeal();var e=$('#onb');if(e)e.remove();document.body.classList.remove('lock');go(TAB)}
 var STEPS={
@@ -2456,7 +2480,7 @@ function vBilan(){
   var done=pil.filter(function(c){return cnt[c]}).length,pct=done/pil.length;
   var lab=WOFF===0?'Cette semaine':WOFF===-1?'Semaine dernière':'Semaine du '+dMed(w.debut);
   PG={t:'Accueil',sub:cap(dLong(today()))};
-  var h=(WOFF===0&&!S.cur?homeNext()+'<div class="sec">Ta semaine</div>':'')+'<div class="weeknav"><button class="ib" data-act="wk" data-v="-1" aria-label="Semaine précédente">'+SVGI.prev+'</button>'+
+  var h=(WOFF===0&&!notesVu()?'<div class="list">'+li({act:'news-show',ic:it('trophy','c-ac'),t:'Carnet est passé en '+esc(VERSION),sb:1,m:'Voir les notes de version : ce que la mise à jour apporte',chev:1})+'</div>':'')+(WOFF===0&&!S.cur?homeNext()+'<div class="sec">Ta semaine</div>':'')+'<div class="weeknav"><button class="ib" data-act="wk" data-v="-1" aria-label="Semaine précédente">'+SVGI.prev+'</button>'+
     '<div class="wl">'+lab+'<small>'+dMed(w.debut)+' au '+dMed(w.fin)+'</small></div>'+
     '<button class="ib" data-act="wk" data-v="1" aria-label="Semaine suivante"'+(WOFF>=0?' disabled style="opacity:.3"':'')+'>'+SVGI.next+'</button></div>';
   var pz=p.z2goal?Math.min(1,w.z2/p.z2goal):0;
@@ -2978,7 +3002,7 @@ function vReg(){
   h+='<div class="sec">Données</div><div class="list">'+
     li({act:'tab',extra:' data-t="exos"',t:'Exercices',r:S.exos.length,chev:1})+
     li({act:'export',cls:'acc',t:'Exporter la sauvegarde'})+li({act:'import',cls:'acc',t:'Importer une sauvegarde'})+li({act:'prg-imp',cls:'acc',t:'Importer un programme',m:S.lib&&S.lib.length?(S.lib.length+1)+' programmes sur ce téléphone':''})+
-    li({act:'onb-show',t:'Procédure d\'installation',chev:1})+li({act:'news-show',t:'Nouveautés de la version',chev:1})+'</div>'+
+    li({act:'onb-show',t:'Procédure d\'installation',chev:1})+li({act:'news-show',t:'Notes de version'+(notesVu()?'':'<span class="rnew">Nouveau</span>'),m:'Ce que chaque version a apporté',r:esc(VERSION),chev:1})+'</div>'+
     '<p class="foot">Les données restent sur ce téléphone. Exporte avant chaque mise à jour.</p>';
   h+='<div class="list">'+li({act:'reset',cls:'red ctr',t:'Effacer toutes les données'})+'</div>';
   h+='<p class="foot" style="text-align:center;margin-top:18px">Carnet '+VERSION+' · schéma '+S.schema+' · '+S.seances.length+' séances</p>';
@@ -4210,8 +4234,80 @@ function methView(d){var P=d.principes,h='';
   if(d.source)h+='<p class="foot">'+esc(d.source)+'</p>';
   return h||'<p class="foot">Aucun contenu de méthode dans ce fichier.</p>'}
 /* Nutrition : calculateur (paramètres du fichier), protéines par kilo, assiette, journée type, menus, repas dehors, sections, FAQ */
+/* Pictogrammes alimentaires : [clé, libellé, couleur de fond, svg 32×32, motif] */
+var FOOD=[
+ ['patate','Pommes de terre','#C9A06A','<path d="M7 18c-2-5 2-10 8-10 5-1 11 1 11 7 1 6-4 10-10 10-5 0-8-3-9-7z" fill="#C9A06A"/><circle cx="12" cy="15" r="1.1" fill="#8E6A3C"/><circle cx="19" cy="13" r="1.1" fill="#8E6A3C"/><circle cx="17" cy="20" r="1.1" fill="#8E6A3C"/>',/pommes? de terre|patate|grenaille|frite/],
+ ['glace','Glace','#F49AC1','<path d="M11 17h10l-5 11z" fill="#D9A35B"/><path d="M12.5 19.5l6 1M13.5 22.5l4 .6" stroke="#B07A35" stroke-width="1"/><circle cx="16" cy="13" r="6" fill="#F49AC1"/><circle cx="13.5" cy="11" r="1.5" fill="#FBD3E5"/>',/\bglace|sorbet/],
+ ['shaker','Whey','#7C8CF8','<rect x="10" y="6" width="12" height="4" rx="1.5" fill="#3C3F58"/><path d="M10 11h12l-1.5 16h-9z" fill="#7C8CF8"/><path d="M11 15h10" stroke="#C9D0FF" stroke-width="1.5"/>',/whey|shaker|prot[ée]in[ée] en poudre/],
+ ['oeuf','Œufs','#F5B82E','<path d="M6 15c0-5 5-8 9-7 4-3 11 0 11 5 3 3 2 10-3 10-2 4-10 4-12 1-4 0-6-5-5-9z" fill="#F7F3EA" stroke="#D9CFBF" stroke-width="1"/><circle cx="16" cy="16" r="4.5" fill="#F5B82E"/>',/œuf|oeuf|omelette|pancake/],
+ ['laitage','Laitage','#5AA9E6','<path d="M9 12h14l-1.8 14H10.8z" fill="#F3F5F7" stroke="#C9D3DC" stroke-width="1"/><rect x="8" y="8" width="16" height="4" rx="1.5" fill="#5AA9E6"/><path d="M11 18h10" stroke="#5AA9E6" stroke-width="1.5"/>',/skyr|k[ée]fir|\blait\b|yaourt|fromage blanc|lait demi/],
+ ['pain','Pain','#D99A4E','<path d="M5 15c0-5 5-7 11-7s11 2 11 7c0 2-1 3-2 3v6H7v-6c-1 0-2-1-2-3z" fill="#D99A4E"/><path d="M11 11l2 4M16 10.5l2 4M21 11l2 4" stroke="#A8692C" stroke-width="1.4" stroke-linecap="round"/>',/\bpain|baguette|sandwich|burrito|tortilla|wrap|toast|tartine/],
+ ['poisson','Poisson','#4A90C2','<path d="M4 16c4-6 12-7 18-2l5-4v12l-5-4c-6 5-14 4-18-2z" fill="#4A90C2"/><circle cx="10" cy="15" r="1.3" fill="#fff"/><path d="M14 13c1 2 1 4 0 6" stroke="#2E6F9E" stroke-width="1.2" fill="none"/>',/saumon|thon|poisson|sardine|maquereau|cabillaud/],
+ ['volaille','Volaille','#D9893D','<path d="M18 6c5 0 8 4 7 8-1 5-6 6-9 5l-5 5" fill="none"/><path d="M14 10c2-4 9-5 11 0 2 4-1 9-6 9-2 0-3-1-4-2z" fill="#D9893D"/><path d="M15 17l-6 6" stroke="#F1E6D6" stroke-width="3" stroke-linecap="round"/><circle cx="8" cy="23.5" r="2" fill="#F1E6D6"/><circle cx="9.5" cy="25" r="2" fill="#F1E6D6"/>',/poulet|dinde|volaille|[ée]minc[ée]/],
+ ['viande','Viande','#C8553D','<path d="M8 10c4-4 13-3 16 2 3 5-1 12-8 12-6 0-10-4-10-8 0-2 1-4 2-6z" fill="#C8553D"/><path d="M10 15c3-3 8-3 11 0" stroke="#F4D3C4" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="19" cy="19" r="2" fill="#F4D3C4"/>',/bifteck|steak|viande|bavette|b[œo]e?uf|foie|hach[ée]/],
+ ['fromage','Fromage','#E7B730','<path d="M4 22l20-11 4 3v9H4z" fill="#F5C542"/><path d="M4 22h24" stroke="#D9A82A" stroke-width="1"/><circle cx="12" cy="20" r="1.4" fill="#D9A82A"/><circle cx="20" cy="17.5" r="1.2" fill="#D9A82A"/><circle cx="22" cy="21" r="1" fill="#D9A82A"/>',/fromage|cantal|emmental|cheddar|comt[ée]|mozzarella|parmesan/],
+ ['pates','Pâtes','#F2C14E','<ellipse cx="16" cy="21" rx="12" ry="5" fill="#E7E3DA"/><path d="M8 19c2-6 4 0 6-6s4 6 6 0 3 4 4 6" stroke="#F2C14E" stroke-width="2.2" fill="none" stroke-linecap="round"/><circle cx="17" cy="18" r="2.2" fill="#D9442E"/>',/p[âa]tes|spaghetti|pasta|nouille|lasagne/],
+ ['riz','Riz et céréales','#3E8ED0','<path d="M7 16c1-4 5-6 9-6s8 2 9 6z" fill="#F4EFE6"/><path d="M5 16h22c0 6-5 10-11 10S5 22 5 16z" fill="#3E8ED0"/><path d="M12 13l1 1M17 12l1 1M20 14l1 .5" stroke="#CFC6B6" stroke-width="1"/>',/\briz|basmati|bowl|poke|quinoa|sarrasin|muesli|flocon|avoine|c[ée]r[ée]ale/],
+ ['baie','Fruits rouges','#C7254E','<circle cx="11" cy="18" r="5" fill="#C7254E"/><circle cx="20" cy="19" r="5" fill="#9B1D44"/><circle cx="16" cy="12" r="4.5" fill="#E23D63"/><circle cx="15" cy="10.5" r="1" fill="#F7B5C5"/><circle cx="10" cy="16.5" r="1" fill="#F7B5C5"/>',/fruits rouges|myrtille|framboise|fraise/],
+ ['banane','Banane','#F6C93B','<path d="M6 9c2 9 9 15 19 14 1 0 1-2 0-2-8-1-13-5-16-13-1-1-3-1-3 1z" fill="#F6C93B"/><path d="M6 9l-1-2" stroke="#6B4F2A" stroke-width="2" stroke-linecap="round"/>',/banane/],
+ ['fruit','Fruits','#E5484D','<path d="M16 11c-3-2-9-1-9 6 0 6 4 10 7 9 1 0 1-.5 2-.5s1 .5 2 .5c3 1 7-3 7-9 0-7-6-8-9-6z" fill="#E5484D"/><path d="M16 11c0-2 1-4 2-5" stroke="#6B4F2A" stroke-width="1.6" fill="none" stroke-linecap="round"/><ellipse cx="20" cy="7.5" rx="2.6" ry="1.4" fill="#4CAF50" transform="rotate(-25 20 7.5)"/>',/pomme|fruit|mangue|orange|kiwi|poire|compote/],
+ ['legume','Légumes','#4CAF50','<path d="M9 24l11-11 3 3-11 11c-2 1-4-1-3-3z" fill="#F08A24"/><path d="M13 20l2 2M16 17l2 2" stroke="#C96A12" stroke-width="1"/><path d="M21 12c0-3 2-5 5-5-1 3-2 4-5 5zM22 13c2-2 5-2 7 0-2 2-4 2-7 0z" fill="#4CAF50"/>',/l[ée]gume|carotte|crudit[ée]|salade|brocoli|haricot|lentille|pois chiche|courgette|[ée]pinard/],
+ ['tomate','Tomate','#D9442E','<circle cx="16" cy="18" r="9" fill="#D9442E"/><path d="M16 9l2 2 3-1-1 3 3 1-4 1-3 2-3-2-4-1 3-1-1-3 3 1z" fill="#4CAF50"/><circle cx="12" cy="17" r="1.5" fill="#F08A7E"/>',/tomate|coulis/],
+ ['avocat','Bons gras','#7BB661','<path d="M16 5c4 0 6 5 7 9 2 5 0 13-7 13S7 19 9 14c1-4 3-9 7-9z" fill="#4E8A3A"/><path d="M16 8c3 0 4 4 5 7 1 4 0 10-5 10s-6-6-5-10c1-3 2-7 5-7z" fill="#D8E8A0"/><circle cx="16" cy="19" r="3.5" fill="#8B5A2B"/>',/avocat|huile|ol[ée]agineu|amande|\bnoix|noisette|bons? gras|om[ée]ga|cacahu|beurre de/],
+ ['chocolat','Chocolat','#7A4A2B','<rect x="8" y="6" width="16" height="20" rx="2" fill="#7A4A2B"/><path d="M8 12.5h16M8 19h16M16 6v13" stroke="#5E3820" stroke-width="1.2"/><path d="M8 19h16v5a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2z" fill="#C0392B"/>',/chocolat|barre|brownie|cacao/],
+ ['miel','Miel','#F2A900','<path d="M10 12h12v11a3 3 0 0 1-3 3h-6a3 3 0 0 1-3-3z" fill="#F2A900"/><rect x="9" y="8" width="14" height="4" rx="1.5" fill="#B87A00"/><path d="M13 17h6" stroke="#FFD86B" stroke-width="1.6" stroke-linecap="round"/>',/\bmiel|sirop|confiture/],
+ ['cafe','Café','#8B5A3C','<path d="M7 12h15v7a6 6 0 0 1-6 6h-3a6 6 0 0 1-6-6z" fill="#8B5A3C"/><path d="M22 14h2a3 3 0 0 1 0 6h-2" stroke="#8B5A3C" stroke-width="2" fill="none"/><path d="M11 9c0-2 2-2 2-4M16 9c0-2 2-2 2-4" stroke="#B9917A" stroke-width="1.3" fill="none" stroke-linecap="round"/><rect x="5" y="26" width="19" height="2" rx="1" fill="#6B432C"/>',/caf[ée]|\bth[ée]\b|infusion/],
+ ['eau','Eau','#3FA7E0','<path d="M16 5c4 6 8 10 8 14a8 8 0 0 1-16 0c0-4 4-8 8-14z" fill="#3FA7E0"/><path d="M12 19a4 4 0 0 0 4 4" stroke="#BDE3F7" stroke-width="1.6" fill="none" stroke-linecap="round"/>',/\beau\b|boisson|hydrat|gazeuse/],
+ ['soleil','Réveil','#F7B733','<circle cx="16" cy="16" r="6" fill="#F7B733"/><path d="M16 4v4M16 24v4M4 16h4M24 16h4M7.5 7.5l2.8 2.8M21.7 21.7l2.8 2.8M7.5 24.5l2.8-2.8M21.7 10.3l2.8-2.8" stroke="#F7B733" stroke-width="2" stroke-linecap="round"/>',/r[ée]veil|matin/],
+ ['panier','Courses','#2FA37A','<path d="M5 11h22l-2.5 13a2 2 0 0 1-2 1.6H9.5a2 2 0 0 1-2-1.6z" fill="#2FA37A"/><path d="M10 11l4-6M22 11l-4-6" stroke="#1E7556" stroke-width="2" stroke-linecap="round"/><path d="M11 15v7M16 15v7M21 15v7" stroke="#BFEBD9" stroke-width="1.6" stroke-linecap="round"/>',/^panier$/],
+ ['halt','Entraînement','#5B8DA6','<path d="M9 11v10M23 11v10M12 16h8M6 13.5v5M26 13.5v5" stroke="#5B8DA6" stroke-width="3" stroke-linecap="round"/>',/entra[îi]nement|s[ée]ance/]];
+function foodK(s){s=String(s||'').toLowerCase();for(var i=0;i<FOOD.length;i++)if(FOOD[i][4].test(s))return i;return -1}
+function foodI(i,sz){var f=FOOD[i];if(!f)return '';return '<span class="fi'+(sz?' '+sz:'')+'" style="--fc:'+f[2]+'" role="img" aria-label="'+f[1]+'" title="'+f[1]+'"><svg viewBox="0 0 32 32">'+f[3]+'</svg></span>'}
+function foodMain(nom,items){var k=foodK(nom);if(k<0)(items||[]).some(function(x){k=foodK(x);return k>=0});return k}
+function foodStrip(items){var seen={},o=[];(items||[]).forEach(function(x){var k=foodK(x);if(k>=0&&!seen[k]&&o.length<7){seen[k]=1;o.push(foodI(k))}});
+  return o.length>1?'<div class="fis">'+o.join('')+'</div>':''}
+/* Liste de courses : CRS = nombre de jours par menu (index), en mémoire seulement */
+var CRS={};
+var RAYONS=[['Fruits et légumes',['fruit','banane','baie','legume','tomate','patate']],['Viandes, poissons, œufs',['viande','volaille','poisson','oeuf']],
+  ['Crèmerie',['laitage','fromage']],['Pain et féculents',['pain','pates','riz']],['Épicerie',['miel','chocolat','avocat','cafe','shaker','eau']],['Surgelés',['glace']]];
+function crsParse(s){s=String(s||'').trim();
+  var m=s.match(/^(\d+(?:[.,]\d+)?)\s*(kg|g|ml|cl|l)\s+(?:de\s+|d['’]\s*)?(.+)$/i),q,u,n;
+  if(m){q=+m[1].replace(',','.');u=m[2].toLowerCase();n=m[3];if(u==='kg'){q*=1000;u='g'}if(u==='l'){q*=1000;u='ml'}if(u==='cl'){q*=10;u='ml'}}
+  else if((m=s.match(/^(\d+)\s+(?:(tranches?|carr[ée]s?|capsules?|mini-pots?|pots?|sachets?|cuill[eè]res?(?: à (?:soupe|café))?)\s+(?:de\s+|d['’]\s*))?(.+)$/i))){q=+m[1];u=m[2]?m[2].toLowerCase().replace(/s$/,'').replace(/ée?$/,'é'):'';n=m[3]}
+  else return {q:0,u:'',n:s,k:s.toLowerCase()};
+  n=n.replace(/\s+pes[ée]e?s?\s+(?:cuite?s?|crue?s?)\b/i,'').replace(/^gros\s+/i,'').trim();
+  var k=n.toLowerCase().split(' ').map(function(w,i){return i===0?w.replace(/([a-zœé])[sx]$/,'$1'):w}).join(' ');
+  return {q:q,u:u,n:n,k:k+'|'+u}}
+function crsSplit(it){return String(it||'').split(/\s+et\s+(?=\d)/)}
+function crsList(n){var acc={},ord=[],sel=[];
+  (n.menus||[]).forEach(function(mn,i){var x=+CRS[i]||0;if(!x)return;sel.push(mn.nom+' × '+x);
+    (mn.repas||[]).forEach(function(r){(r.items||[]).forEach(function(it){crsSplit(it).forEach(function(s){var p=crsParse(s);
+      if(!acc[p.k]){acc[p.k]={n:p.n,u:p.u,q:0,x:0,f:foodK(p.n)};ord.push(p.k)}
+      if(p.q)acc[p.k].q+=p.q*x;else acc[p.k].x+=x})})})});
+  var R=RAYONS.map(function(r){return {t:r[0],ks:r[1],l:[]}}),autre={t:'Autres',l:[]};
+  ord.forEach(function(k){var a=acc[k],fk=a.f>=0?FOOD[a.f][0]:'',g=R.filter(function(r){return r.ks.indexOf(fk)>=0})[0]||autre;g.l.push(a)});
+  return {sel:sel,ray:R.concat([autre]).filter(function(r){return r.l.length})}}
+function crsQ(a){if(!a.q)return '× '+a.x;var q=a.q,u=a.u;
+  if(u==='g'&&q>=1000)return String(Math.round(q/100)/10).replace('.',',')+' kg';
+  if(u==='ml'&&q>=1000)return String(Math.round(q/100)/10).replace('.',',')+' l';
+  return String(Math.round(q*10)/10).replace('.',',')+(u?' '+u+(u!=='g'&&u!=='ml'&&q>1&&!/s$/.test(u)?'s':''):'')}
+function crsName(a){var s=a.n;return s.charAt(0).toUpperCase()+s.slice(1)}
+function crsBody(n){var L=crsList(n),h='<div class="sec" style="margin-top:4px">Combien de jours pour chaque menu ?</div><div class="list">'+
+  (n.menus||[]).map(function(mn,i){var x=+CRS[i]||0;return '<div class="li nc"><span class="grow"><div class="t">'+esc(mn.nom)+'</div><div class="m">'+(mn.kcal?'≈ '+esc(mn.kcal)+' kcal par jour':'')+'</div></span>'+
+    '<span class="crn"><button data-act="crs" data-i="'+i+'" data-v="-1" aria-label="Moins">−</button><b>'+x+'</b><button data-act="crs" data-i="'+i+'" data-v="1" aria-label="Plus">+</button></span></div>'}).join('')+'</div>';
+  if(!L.sel.length)return h+'<p class="foot" style="margin-top:4px">Ajoute au moins un jour pour voir la liste.</p>';
+  h+=L.ray.map(function(r){return '<div class="sec">'+esc(r.t)+'</div><div class="list crs">'+r.l.map(function(a){
+    return li({ic:a.f>=0?foodI(a.f,'sm'):'',icsm:1,t:esc(crsName(a)),r:'<span class="crq">'+esc(crsQ(a))+'</span>'})}).join('')+'</div>'}).join('');
+  return h+'<div class="row" style="gap:8px;margin-top:14px"><button class="b grow" data-act="crs-copy">Copier</button><button class="b pri grow" data-act="crs-share">Partager</button></div>'}
+function crsText(n){var L=crsList(n),o=['Liste de courses ('+L.sel.join(', ')+')'];
+  L.ray.forEach(function(r){o.push('',r.t.toUpperCase());r.l.forEach(function(a){o.push('- '+crsName(a)+' : '+crsQ(a))})});return o.join('\n')}
+function crsNut(){return S.prog&&S.prog.data&&S.prog.data.nutrition}
+function crsOpen(){var n=crsNut();if(!n||!(n.menus||[]).length)return;
+  if(!Object.keys(CRS).some(function(k){return CRS[k]>0})){var bm=nutBest(n);CRS={};CRS[bm.i>=0?bm.i:0]=7}
+  openSheet('<div class="shh">'+foodI(foodK('panier'),'')+'<div class="grow"><h2>Liste de courses</h2><div class="s">Cumul des menus types choisis</div></div></div><div id="crsb">'+crsBody(n)+'</div><button class="b full" data-act="close" style="margin-top:10px">Fermer</button>')}
+function crsUpd(){var n=crsNut(),b=$('#crsb');if(n&&b)b.innerHTML=crsBody(n)}
 function nutMac(m){return m&&m.length===3?'Prot. '+esc(m[1])+' g · Gluc. '+esc(m[0])+' g · Lip. '+esc(m[2])+' g':''}
-function nutRepas(r){return li({t:esc(r.nom),m:esc((r.items||[]).join(', '))+(r.mac?'<br><span class="dim">'+nutMac(r.mac)+'</span>':''),r:r.kcal?'<span class="nkc">'+esc(r.kcal)+' kcal</span>':''})}
+function nutRepas(r){var k=foodMain(r.nom,r.items);return li({ic:k>=0?foodI(k):'',t:esc(r.nom),m:esc((r.items||[]).join(', '))+(r.mac?'<br><span class="dim">'+nutMac(r.mac)+'</span>':'')+foodStrip(r.items),r:r.kcal?'<span class="nkc">'+esc(r.kcal)+' kcal</span>':''})}
 function nutTxt(x){return '<div class="li nc"><span class="grow"><div class="nt">'+esc(x)+'</div></span></div>'}
 function nutDet(t,body,open,sub,right){return '<details class="card fgr"'+(open?' open':'')+'><summary><span class="grow" style="min-width:0"><b>'+t+'</b>'+(sub?'<span class="s12 dim" style="display:block;margin-top:3px">'+sub+'</span>':'')+'</span>'+(right||'')+'</summary>'+body+'</details>'}
 var NUTV='calc';
@@ -4262,11 +4358,12 @@ function nutView(n){var p=S.prefs,h='';if(!n)return '';
         A.parts.map(function(x,i){return '<i class="n'+(i%4)+'" style="flex:'+(+x[1]||0)+'"></i>'}).join('')+'</div><div class="nleg">'+
         A.parts.map(function(x,i){return '<span><i class="n'+(i%4)+'"></i>'+esc(x[0])+' <b>'+esc(x[1])+' %</b></span>'}).join('')+'</div>'+
         (A.note?'<p class="s13 muted" style="margin:10px 0 0;line-height:1.4">'+esc(A.note)+'</p>':'')+'</div>'+
-        (A.detail?'<div class="list">'+A.detail.map(function(x){return pgRow(x.t,x.d)}).join('')+'</div>':'')}
+        (A.detail?'<div class="list">'+A.detail.map(function(x){var k=foodMain(x.t,[x.d]);return li({ic:k>=0?foodI(k):'',t:esc(x.t),sb:1,m:esc(x.d)})}).join('')+'</div>':'')}
     if(n.journee&&n.journee.length)h+='<div class="sec"'+(n.assiette?'':' style="margin-top:4px"')+'>Journée type</div><div class="list">'+n.journee.map(function(x){
-      return '<div class="li nc nj"><span class="nh">'+esc(x.h)+'</span><span class="grow">'+(x.items||[]).map(function(t){return '<div class="m">'+esc(t)+'</div>'}).join('')+'</span></div>'}).join('')+'</div>'}
+      var k=foodMain(x.h,x.items);return '<div class="li nc nj">'+(k>=0?foodI(k,'sm'):'')+'<span class="nh">'+esc(x.h)+'</span><span class="grow">'+(x.items||[]).map(function(t){return '<div class="m">'+esc(t)+'</div>'}).join('')+'</span></div>'}).join('')+'</div>'}
   if(NUTV==='menus'){var bm=nutBest(n);
     if(n.menus&&n.menus.length){
+      h+='<div class="list">'+li({act:'crs-open',ic:foodI(foodK('panier')),t:'Liste de courses',m:'Choisis les menus et le nombre de jours : ingrédients cumulés par rayon',chev:1})+'</div>';
       h+=(bm.i>=0?'<p class="foot" style="margin:0 16px 12px">Le plus proche de ta cible de '+bm.c+' kcal : '+esc(n.menus[bm.i].nom)+'. Ajuste avec les glucides.</p>':'<p class="foot" style="margin:0 16px 12px">Renseigne ton profil dans Chiffres pour savoir quel menu correspond à ta cible.</p>')+
         n.menus.map(function(m,i){return nutDet(esc(m.nom)+(i===bm.i?' <span class="tag" style="margin-left:6px">ta cible</span>':''),'<div class="list">'+(m.repas||[]).map(nutRepas).join('')+'</div>',i===bm.i,
           nutMac(m.mac),m.kcal?'<span class="nkc">'+esc(m.kcal)+' kcal</span>':'')}).join('')}
@@ -4585,6 +4682,10 @@ document.addEventListener('click',function(ev){
   case 'prg-sel': S.prog.sel=+b.dataset.v;save();hap('tap');paint(); break;
   case 'zpro': S.prefs.zpro=+b.dataset.v;S.prefs.zet=0;save();hap('tap');paint(); break;
   case 'zet': S.prefs.zet=+b.dataset.v;save();hap('tap');paint(); break;
+  case 'crs-open': crsOpen(); break;
+  case 'crs': {var ci=+b.dataset.i;CRS[ci]=Math.max(0,Math.min(14,(+CRS[ci]||0)+(+b.dataset.v)));hap('tap');crsUpd(); break}
+  case 'crs-copy': {var ct=crsText(crsNut()||{});if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(ct).then(function(){toast('Liste copiée');hap('ok')},function(){promptFallback(ct)});else promptFallback(ct); break}
+  case 'crs-share': {var st=crsText(crsNut()||{});if(navigator.share)navigator.share({title:'Liste de courses',text:st}).catch(function(){});else if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(st).then(function(){toast('Liste copiée');hap('ok')},function(){promptFallback(st)});else promptFallback(st); break}
   case 'nutv': NUTV=b.dataset.v;hap('tap');paint();try{window.scrollTo(0,0)}catch(e){} break;
   case 'prg-del': ask({t:'Retirer le programme ?',m:'Les séances déjà faites restent dans l\'historique.',ok:'Retirer',danger:1}).then(function(ok){if(!ok)return;S.prog=S.lib&&S.lib.length?S.lib.shift():null;PGV='plan';save();go(S.prog?'prog':'renfo')}); break;
   case 'onb-export': doExport();toast('Sauvegarde exportée'); break;
@@ -4592,7 +4693,7 @@ document.addEventListener('click',function(ev){
   case 'onb-os': ONBOS=b.dataset.v;hap('tap');reOnb(); break;
   case 'onb-done': case 'onb-skip': hap('ok');onbClose(); break;
   case 'onb-show': showOnb('install'); break;
-  case 'news-show': showOnb('news'); break;
+  case 'news-show': notesOpen(); break;
   case 'tq-open': {if(!S.cur)break;if(!S.cur.tqo)S.cur.tqo={};S.cur.tqo[id]=1;save();hap('tap');paint();break}
   case 'rpe': {var rf=document.getElementById(b.dataset.f);if(!rf)break;var rv=rf.value===b.dataset.v?'':b.dataset.v;rf.value=rv;
     b.parentNode.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',String(x.dataset.v===rv))});
