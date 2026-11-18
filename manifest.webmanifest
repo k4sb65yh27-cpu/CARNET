@@ -1,7 +1,7 @@
 {
   "name": "Carnet",
   "short_name": "Carnet",
-  "description": "Suivi d'entraînement hybride : renforcement, cardio et séances Hyrox",
+  "description": "Carnet d'entraînement : musculation, poids du corps, course, cardio, haltérophilie et nutrition. Hors ligne, sans compte.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
